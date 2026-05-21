@@ -1,79 +1,138 @@
+// 1. Importaciones oficiales de Firebase 10.8.0
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 1. Configuración de Firebase
+// 2. Configuración de tu Firebase (Asegúrate de que coincida con tus credenciales)
 const firebaseConfig = {
-  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY",
-  authDomain: "aula-virtual-data-studio.firebaseapp.com",
-  projectId: "aula-virtual-data-studio",
-  storageBucket: "aula-virtual-data-studio.firebasestorage.app",
-  messagingSenderId: "1014108490203",
-  appId: "1:1014108490203:web:0a23139f68d8aa9c54bffe",
-  measurementId: "G-MLB9YFMSXV"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_STORAGE_BUCKET",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
+// Inicializar servicios
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// CONTROL DE ACCESO MEDIANTE FIRESTORE
+// ==========================================
+// VISTAS Y ROLES: CONTROL DE FLUJO
+// ==========================================
+
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "index.html";
-    } else {
-        try {
-            const usuarioDocRef = doc(db, "usuarios", user.uid); 
-            const usuarioSnap = await getDoc(usuarioDocRef);
+  if (user) {
+    console.log("Usuario autenticado:", user.email);
+    
+    try {
+      // Buscamos el rol del usuario en tu colección 'usuarios' de Firestore
+      const userDocRef = doc(db, "usuarios", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-            if (usuarioSnap.exists()) {
-                const datosUsuario = usuarioSnap.data();
-                const rolUsuario = datosUsuario.rol; 
+      if (userDocSnap.exists()) {
+        const datosUsuario = userDocSnap.data();
+        const rol = datosUsuario.rol; // Puede ser 'docente' o 'estudiante'
+        console.log("Rol detectado:", rol);
 
-                console.log(`Usuario verificado: ${datosUsuario.nombre} | Rol: ${rolUsuario}`);
-                aplicarPermisosEnPantalla(rolUsuario);
-            } else {
-                console.error("El usuario no tiene un perfil configurado en la base de datos.");
-                alert("Error de acceso: Perfil no encontrado en Firestore. Verifica que el ID del documento coincida exactamente con tu User UID.");
-                window.location.href = "index.html";
-            }
-        } catch (error) {
-            console.error("Error al validar el rol:", error);
+        if (rol === "docente") {
+          mostrarInterfazDocente();
+        } else {
+          mostrarInterfazEstudiante(user.email, user.uid);
         }
+      } else {
+        console.warn("El usuario no tiene un documento de rol en Firestore. Forzando vista estudiante.");
+        mostrarInterfazEstudiante(user.email, user.uid);
+      }
+    } catch (error) {
+      console.error("Error al obtener el rol de Firestore:", error);
+      // En caso de falla de red o permisos, por seguridad mostramos la vista básica de alumno
+      mostrarInterfazEstudiante(user.email, user.uid);
     }
+  } else {
+    console.log("No hay usuario activo. Redirigiendo al login...");
+    window.location.href = "index.html"; // Cambia por el nombre de tu archivo de login si es diferente
+  }
 });
 
-// FUNCIÓN PARA RESTRINGIR O MOSTRAR LA INTERFAZ
-function aplicarPermisosEnPantalla(rol) {
-    const elementosDocente = document.querySelectorAll('.admin-only, .admin-view');
-    const elementosEstudiante = document.querySelectorAll('.student-view');
+// Activar la interfaz de Docente
+function mostrarInterfazDocente() {
+  // Mostramos paneles de administración y tablas de corrección
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
+  // Ocultamos el formulario de entregas del estudiante
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-    if (rol === "docente") {
-        elementosDocente.forEach(el => el.style.display = 'block');
-        elementosEstudiante.forEach(el => el.style.display = 'none'); 
-      document.querySelectorAll('.admin-view, .admin-only').forEach(el => {
-        el.style.display = 'block';
-        
-        cargarControlesVisibilidad();
-        cargarTodasLasEntregas();
-        cargarEntregasParaDocente();
-    } else {
-        elementosDocente.forEach(el => el.style.display = 'none');
-        elementosEstudiante.forEach(el => el.style.display = 'block');
-        
-        aplicarRestriccionesAlumno();
-    }
+  // Cargamos las entregas de los alumnos en tiempo real
+  cargarEntregasParaDocente();
 }
 
-// FUNCION PARA LA ENTREGA DE LOS TRABAJOS
+// Activar la interfaz de Estudiante
+function mostrarInterfazEstudiante(email, uid) {
+  // Ocultamos las herramientas de administración del profesor
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
+  // Aseguramos que el formulario esté visible (ya lo modificamos en el HTML)
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'block';
 
+  // Inicializamos el formulario de envío para este alumno específico
+  inicializarFormularioEntrega(email, uid);
+}
+
+// ==========================================
+// LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
+// ==========================================
+
+// Alumno: Envía la tarea
+function inicializarFormularioEntrega(userEmail, userId) {
+  const formEntrega = document.getElementById('form-entrega');
+  const mensajeExito = document.getElementById('mensaje-exito');
+
+  if (!formEntrega) return;
+
+  // Limpiamos listeners viejos clonando el nodo para evitar ejecuciones múltiples
+  const nuevoForm = formEntrega.cloneNode(true);
+  formEntrega.parentNode.replaceChild(nuevoForm, formEntrega);
+
+  nuevoForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const urlProyecto = document.getElementById('url-proyecto').value;
+    const comentarios = document.getElementById('comentarios-proyecto').value;
+    const fechaEnvio = new Date().toISOString();
+
+    try {
+      await setDoc(doc(db, "entregas", userId), {
+        emailAlumno: userEmail,
+        alumnoId: userId,
+        linkLookerStudio: urlProyecto,
+        comentariosAlumno: comentarios,
+        fecha: fechaEnvio,
+        estado: "Pendiente de corrección"
+      });
+
+      const msg = document.getElementById('mensaje-exito');
+      if (msg) {
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 5000);
+      }
+      nuevoForm.reset();
+      alert("¡Proyecto enviado correctamente!");
+    } catch (error) {
+      console.error("Error al subir la entrega:", error);
+      alert("Hubo un error al guardar tu entrega en la base de datos.");
+    }
+  });
+}
+
+// Docente: Trae las entregas en tiempo real
 function cargarEntregasParaDocente() {
   const tablaU1 = document.getElementById('lista-entregas-u1');
   if (!tablaU1) return;
 
-  // Escuchamos la colección "entregas" en tiempo real
   onSnapshot(collection(db, "entregas"), (snapshot) => {
-    tablaU1.innerHTML = ""; // Limpiamos la tabla para que no se dupliquen las filas
+    tablaU1.innerHTML = "";
 
     if (snapshot.empty) {
       tablaU1.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay entregas registradas aún.</td></tr>`;
@@ -82,16 +141,15 @@ function cargarEntregasParaDocente() {
 
     snapshot.forEach((docSnap) => {
       const entrega = docSnap.data();
-      const idEntrega = docSnap.id; // Es el UID del alumno
+      const idEntrega = docSnap.id;
 
-      // Creamos una fila por cada entrega recibida
       const fila = document.createElement('tr');
       fila.innerHTML = `
         <td><strong>${entrega.emailAlumno || 'Alumno'}</strong><br><small style="color:gray;">${entrega.comentariosAlumno || ''}</small></td>
-        <td><a href="${entrega.linkLookerStudio}" target="_blank" class="download-link" style="padding: 5px 10px; font-size: 12px;">🔗 Ver Reporte</a></td>
-        <td><span class="badge-estado">${entrega.estado || 'Pendiente'}</span></td>
+        <td><a href="${entrega.linkLookerStudio}" target="_blank" class="download-link" style="padding: 5px 10px; font-size: 12px; text-decoration: none;">🔗 Ver Reporte</a></td>
+        <td><span style="background: #e0e0e0; padding: 3px 8px; border-radius: 4px; font-size: 11px;">${entrega.estado || 'Pendiente'}</span></td>
         <td>
-          <button class="btn-toggle" style="padding: 4px 8px; font-size: 11px;" onclick="corregirEntrega('${idEntrega}')">Calificar</button>
+          <button class="btn-logout" style="padding: 4px 8px; font-size: 11px; background: #007bff;" onclick="corregirEntrega('${idEntrega}')">Calificar</button>
         </td>
       `;
       tablaU1.appendChild(fila);
@@ -99,103 +157,35 @@ function cargarEntregasParaDocente() {
   });
 }
 
-// Hacemos la función de corrección accesible desde el HTML global
+// Docente: Cambiar estado o colocar nota
 window.corregirEntrega = async function(id) {
-  const nota = prompt("Introduce la nota o estado para este proyecto (Ej: Aprobado, 9/10, Rehacer):");
-  if (nota === null || nota.trim() === "") return; // Si cancela, no hace nada
+  const nota = prompt("Introduce la nota o estado para este proyecto (Ej: Aprobado, 7/10, Rehacer):");
+  if (nota === null || nota.trim() === "") return;
 
   try {
     const entregaRef = doc(db, "entregas", id);
-    await updateDoc(entregaRef, {
-      estado: nota
-    });
-    alert("¡Calificación actualizada con éxito!");
+    await updateDoc(entregaRef, { estado: nota });
+    alert("¡Calificación guardada!");
   } catch (error) {
     console.error("Error al calificar:", error);
-    alert("No se pudo guardar la nota. Revisa los permisos.");
+    alert("No se pudo actualizar la nota.");
   }
 };
 
-// LOGICA PARA EL BOTÓN DE CERRAR SESIÓN
+// ==========================================
+// BOTÓN DE CERRAR SESIÓN (Arreglado y Asegurado)
+// ==========================================
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-if(btnCerrarSesion) {
-    btnCerrarSesion.addEventListener('click', () => {
-        signOut(auth).then(() => {
-            window.location.href = "index.html";
-        }).catch((err) => {
-            console.error("Error al cerrar sesión:", err);
-        });
-    });
+if (btnCerrarSesion) {
+  btnCerrarSesion.addEventListener('click', () => {
+    signOut(auth)
+      .then(() => {
+        console.log("Sesión cerrada correctamente.");
+        window.location.href = "index.html";
+      })
+      .catch((error) => {
+        console.error("Error al cerrar sesión:", error);
+        alert("No se pudo cerrar la sesión correctamente.");
+      });
+  });
 }
-
-// =========================================================================
-// FUNCIONES DE SOPORTE (Evitan que el código falle por no estar declaradas)
-// =========================================================================
-
-async function cargarControlesVisibilidad() {
-    try {
-        const configDoc = doc(db, "configuracion", "unidades");
-        const docSnap = await getDoc(configDoc);
-        if (docSnap.exists()) {
-            const estados = docSnap.data();
-            for (let i = 1; i <= 4; i++) {
-                const botonEstado = document.getElementById(`estado-unidad${i}`);
-                if (botonEstado) {
-                    botonEstado.innerText = estados[`unidad${i}`] ? "🟢 Visible para Alumnos" : "🔴 Oculto para Alumnos";
-                }
-            }
-        }
-    } catch (e) { console.log("Nota: Colección 'configuracion' aún no creada en Firestore."); }
-}
-
-async function cargarTodasLasEntregas() {
-    try {
-        const querySnapshot = await getDocs(collection(db, "tp_entregas"));
-        for(let i=1; i<=4; i++) {
-            const lista = document.getElementById(`lista-entregas-u${i}`);
-            if(lista) lista.innerHTML = "";
-        }
-        querySnapshot.forEach((alumnoDoc) => {
-            const datos = alumnoDoc.data();
-            const idUnidad = datos.unidad;
-            const contenedorLista = document.getElementById(`lista-entregas-u${idUnidad.replace("unidad", "")}`);
-            if (contenedorLista) {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td><strong>${datos.alumnoNombre}</strong><br><small>${datos.alumnoEmail}</small></td>
-                    <td><a href="${datos.linkEntrega}" target="_blank">🔗 Ver Trabajo</a></td>
-                    <td><span>${datos.nota || "Sin calificar"}</span></td>
-                    <td><button>📝 Corregir</button></td>
-                `;
-                contenedorLista.appendChild(fila);
-            }
-        });
-    } catch(e) { console.log("Nota: Colección 'tp_entregas' vacía o aún no creada."); }
-}
-
-async function aplicarRestriccionesAlumno() {
-    try {
-        const configDoc = doc(db, "configuracion", "unidades");
-        const docSnap = await getDoc(configDoc);
-        if (docSnap.exists()) {
-            const estados = docSnap.data();
-            for (let i = 1; i <= 4; i++) {
-                const seccionUnidad = document.getElementById(`unidad${i}`);
-                if (seccionUnidad && !estados[`unidad${i}`]) {
-                    seccionUnidad.style.display = "none";
-                }
-            }
-        }
-    } catch(e) { console.log("Error al aplicar restricciones."); }
-}
-
-// Ventana global para usar los botones del HTML
-window.cambiarVisibilidad = async function(idUnidad) {
-    const botonEstado = document.getElementById(`estado-${idUnidad}`);
-    const configDoc = doc(db, "configuracion", "unidades");
-    const esVisibleActual = botonEstado.innerText.includes("🟢");
-    const nuevoEstado = !esVisibleActual;
-
-    await updateDoc(configDoc, { [idUnidad]: nuevoEstado });
-    botonEstado.innerText = nuevoEstado ? "🟢 Visible para Alumnos" : "🔴 Oculto para Alumnos";
-};
