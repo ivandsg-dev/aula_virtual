@@ -2,16 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel del Curso - Data Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Curso - Looker Studio</title>
+    <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+
     <!-- Encabezado del Curso -->
     <header>
-        <h1>Curso Práctico de Data Studio</h1>
+        <h1>Curso Práctico de Looker Studio</h1>
         <p>Domina la visualización de datos, la conexión de fuentes y la creación de reportes automatizados.</p>
+        <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
     </header>
 
-    <!-- Sección Sobre Mí (Información extraída de tu perfil profesional) -->
+    <!-- Sección Sobre Mí -->
     <section class="instructor-bio">
         <h2>Tu Instructor</h2>
         <div class="bio-content">
@@ -39,76 +43,112 @@
         </table>
     </section>
 
-    <!-- Bloque de Unidad (Se repite para las 4 unidades) -->
-    <!-- NOTA: El atributo data-visible se controlará con JS o Backend para habilitar/deshabilitar -->
-    <section class="unit-section" id="unidad1" data-visible="true">
+    <!-- ======================================================= -->
+    <!-- BLOQUES DE UNIDADES (Reemplazan la estructura anterior) -->
+    <!-- ======================================================= -->
+
+    <!-- UNIDAD 1 -->
+    <section class="unit-section" id="unidad1">
         <div class="unit-header">
-            <h2>Unidad 1: Introducción a la Visualización</h2>
-            <!-- Este botón solo lo ve el Docente -->
-            <button class="admin-only toggle-btn">Ocultar Unidad</button>
+            <h2>Unidad 1: Introducción a Looker Studio</h2>
+            <div class="admin-only control-visibilidad" style="display:none;">
+                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad1')">
+                    Estado: <span id="estado-unidad1">Cargando...</span>
+                </button>
+            </div>
         </div>
-        <p class="unit-description">Conceptos fundamentales de BI y los primeros pasos en la interfaz.</p>
-        
-        <!-- Materiales -->
+        <p class="unit-description">Conceptos fundamentales de visualización de datos y conexión de fuentes.</p>
         <div class="unit-resources">
-            <h3>Material de Clase</h3>
-            <a href="#" class="download-link">📥 Descargar PDF de la Unidad</a>
-            <div class="video-responsive">
-                <!-- Ejemplo de video embebido -->
-                <iframe src="https://www.youtube.com/embed/ejemplo" frameborder="0" allowfullscreen></iframe>
-            </div>
+            <a href="#" class="download-link">📥 Descargar PDF Unidad 1</a>
         </div>
-
-        <!-- Zona de Trabajos Prácticos (Vista Dinámica) -->
-        <div class="unit-assignment">
-            <h3>Trabajo Práctico Nº 1</h3>
-            <p class="assignment-prompt"><strong>Consigna:</strong> Conecta tu primera fuente de datos de Google Analytics y genera un gráfico de líneas.</p>
-            
-            <!-- VISTA ALUMNO (Se muestra si el rol es 'student') -->
-            <div class="student-view">
-                <form class="upload-assignment-form">
-                    <label>Subir archivo (PDF/ZIP):</label>
-                    <input type="file">
-                    <label>O comparte el link de tu reporte de Looker Studio:</label>
-                    <input type="url" placeholder="https://lookerstudio.google.com/...">
-                    <button type="submit">Enviar Tarea</button>
-                </form>
-                <div class="feedback-box">
-                    <h4>Devolución del Docente:</h4>
-                    <p class="grade">Nota: <span id="nota-actual">Pendiente</span></p>
-                    <p class="comments">Aún no se han cargado comentarios.</p>
-                </div>
-            </div>
-
-            <!-- VISTA DOCENTE (Se muestra si el rol es 'admin') -->
-            <div class="admin-view" style="display:none;">
-                <h4>Entregas de los Alumnos</h4>
-                <ul class="student-submissions-list">
-                    <li>
-                        <strong>Alumno: Juan Pérez</strong> 
-                        <br>Entrega: <a href="#">Ver Archivo</a> o <a href="#" target="_blank">Abrir Link</a>
-                        <br>
-                        <form class="grade-form">
-                            <input type="number" placeholder="Nota" min="1" max="10">
-                            <textarea placeholder="Escribe la devolución aquí..."></textarea>
-                            <button type="submit">Calificar</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+        <!-- Panel de corrección exclusivo del docente -->
+        <div class="admin-view center-correccion" style="display:none;">
+            <h3>📋 Panel de Entregas - TP 1</h3>
+            <table>
+                <thead>
+                    <tr><th>Alumno</th><th>Entrega</th><th>Nota</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="lista-entregas-u1"></tbody>
+            </table>
         </div>
     </section>
 
-    <!-- Foro de Consultas de la Unidad -->
-    <section class="forum-section">
-        <h3>Foro de Discusión</h3>
-        <div class="forum-messages">
-            <!-- Mensajes dinámicos de la Base de Datos -->
+    <!-- UNIDAD 2 -->
+    <section class="unit-section" id="unidad2">
+        <div class="unit-header">
+            <h2>Unidad 2: Dimensiones, Métricas y Gráficos</h2>
+            <div class="admin-only control-visibilidad" style="display:none;">
+                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad2')">
+                    Estado: <span id="estado-unidad2">Cargando...</span>
+                </button>
+            </div>
         </div>
-        <form id="forumForm">
-            <textarea placeholder="Escribe tu consulta o respuesta..." required></textarea>
-            <button type="submit">Publicar en el Foro</button>
-        </form>
+        <p class="unit-description">Uso avanzado de campos calculados, métricas agregadas y formatos condicionales.</p>
+        <div class="unit-resources">
+            <a href="#" class="download-link">📥 Descargar PDF Unidad 2</a>
+        </div>
+        <div class="admin-view center-correccion" style="display:none;">
+            <h3>📋 Panel de Entregas - TP 2</h3>
+            <table>
+                <thead>
+                    <tr><th>Alumno</th><th>Entrega</th><th>Nota</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="lista-entregas-u2"></tbody>
+            </table>
+        </div>
     </section>
+
+    <!-- UNIDAD 3 -->
+    <section class="unit-section" id="unidad3">
+        <div class="unit-header">
+            <h2>Unidad 3: Combinación de Datos y Filtros</h2>
+            <div class="admin-only control-visibilidad" style="display:none;">
+                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad3')">
+                    Estado: <span id="estado-unidad3">Cargando...</span>
+                </button>
+            </div>
+        </div>
+        <p class="unit-description">Estrategias de Blending (combinación de fuentes de datos) y controles de filtrado interactivos.</p>
+        <div class="unit-resources">
+            <a href="#" class="download-link">📥 Descargar PDF Unidad 3</a>
+        </div>
+        <div class="admin-view center-correccion" style="display:none;">
+            <h3>📋 Panel de Entregas - TP 3</h3>
+            <table>
+                <thead>
+                    <tr><th>Alumno</th><th>Entrega</th><th>Nota</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="lista-entregas-u3"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- UNIDAD 4 -->
+    <section class="unit-section" id="unidad4">
+        <div class="unit-header">
+            <h2>Unidad 4: Diseño de Tableros y Reportes</h2>
+            <div class="admin-only control-visibilidad" style="display:none;">
+                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad4')">
+                    Estado: <span id="estado-unidad4">Cargando...</span>
+                </button>
+            </div>
+        </div>
+        <p class="unit-description">Buenas prácticas de UI/UX para dashboards e insights automatizados para clientes.</p>
+        <div class="unit-resources">
+            <a href="#" class="download-link">📥 Descargar PDF Unidad 4</a>
+        </div>
+        <div class="admin-view center-correccion" style="display:none;">
+            <h3>📋 Panel de Entregas - TP 4</h3>
+            <table>
+                <thead>
+                    <tr><th>Alumno</th><th>Entrega</th><th>Nota</th><th>Acción</th></tr>
+                </thead>
+                <tbody id="lista-entregas-u4"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Enlace al archivo de lógica JavaScript -->
+    <script type="module" src="dashboard.js"></script>
 </body>
 </html>
