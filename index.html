@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso de Data Studio - Login</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <main class="welcome-container">
+        <h1>Plataforma del Curso de Data Studio</h1>
+        <p>Ingresa para acceder al material de las 4 unidades y tus entregas.</p>
+        
+        <section class="login-box">
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+                <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                <button type="submit">Ingresar</button>
+            </form>
+            <p id="errorMessage" style="color: red; display: none;"></p>
+        </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
