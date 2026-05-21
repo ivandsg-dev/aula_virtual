@@ -5,12 +5,13 @@ import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } 
 
 // 2. Configuración de tu Firebase (Asegúrate de que coincida con tus credenciales)
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY",
+  authDomain: "aula-virtual-data-studio.firebaseapp.com",
+  projectId: "aula-virtual-data-studio",
+  storageBucket: "aula-virtual-data-studio.firebasestorage.app",
+  messagingSenderId: "1014108490203",
+  appId: "1:1014108490203:web:0a23139f68d8aa9c54bffe",
+  measurementId: "G-MLB9YFMSXV"
 };
 
 // Inicializar servicios
