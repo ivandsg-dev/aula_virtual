@@ -4,12 +4,13 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https:/
 
 // 2. CONFIGURACIÓN DE TU PROYECTO (Pega aquí lo que te dio la consola de Firebase)
 const firebaseConfig = {
-    apiKey: "TU_API_KEY_AQUÍ",
-    authDomain: "TU_AUTH_DOMAIN_AQUÍ",
-    projectId: "TU_PROJECT_ID_AQUÍ",
-    storageBucket: "TU_STORAGE_BUCKET_AQUÍ",
-    messagingSenderId: "TU_MESSAGING_SENDER_ID_AQUÍ",
-    appId: "TU_APP_ID_AQUÍ"
+  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY",
+  authDomain: "aula-virtual-data-studio.firebaseapp.com",
+  projectId: "aula-virtual-data-studio",
+  storageBucket: "aula-virtual-data-studio.firebasestorage.app",
+  messagingSenderId: "1014108490203",
+  appId: "1:1014108490203:web:0a23139f68d8aa9c54bffe",
+  measurementId: "G-MLB9YFMSXV"
 };
 
 // 3. Inicializar Firebase y el servicio de Autenticación
