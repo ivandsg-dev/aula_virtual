@@ -16,37 +16,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// REGLA DE SEGURIDAD FÁCIL: Define aquí tu correo de docente
-const EMAIL_DOCENTE = "ivandsg@gmail.com"; 
-
-// 2. Controlar quién está de visita en la página
-onAuthStateChanged(auth, (user) => {
+// CONTROL DE ACCESO MEDIANTE FIRESTORE
+onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        // Si no hay usuario logueado, lo expulsamos al Login inmediatamente
+        // Si no está logueado, va al login
         window.location.href = "index.html";
     } else {
-        // ¡El usuario está logueado! Ahora chequeamos su rol
-        console.log("Usuario actual:", user.email);
-        
-        configurarInterfazSegunRol(user.email);
+        // El usuario se autenticó. Vamos a buscar su rol real en la base de datos
+        try {
+            const usuarioDocRef = doc(db, "usuarios", user.uid); // Buscamos su documento usando su UID
+            const usuarioSnap = await getDoc(usuarioDocRef);
+
+            if (usuarioSnap.exists()) {
+                const datosUsuario = usuarioSnap.data();
+                const rolUsuario = datosUsuario.rol; // Almacena "docente" o "estudiante"
+
+                console.log(`Usuario verificado: ${datosUsuario.nombre} | Rol: ${rolUsuario}`);
+                aplicarPermisosEnPantalla(rolUsuario);
+            } else {
+                // Caso extremo: El usuario existe en Authentication pero lo borraste de Firestore
+                console.error("El usuario no tiene un perfil configurado en la base de datos.");
+                alert("Error de acceso: Perfil no encontrado.");
+                window.location.href = "index.html";
+            }
+        } catch (error) {
+            console.error("Error al validar el rol:", error);
+        }
     }
 });
 
-// 3. Función para mostrar/ocultar elementos según el rol
-function configurarInterfazSegunRol(emailUsuario) {
-    const vistasAdmin = document.querySelectorAll('.admin-view, .admin-only');
-    const vistasEstudiante = document.querySelectorAll('.student-view');
+// FUNCIÓN PARA RESTRINGIR O MOSTRAR LA INTERFAZ
+function aplicarPermisosEnPantalla(rol) {
+    const elementosDocente = document.querySelectorAll('.admin-only, .admin-view');
+    const elementosEstudiante = document.querySelectorAll('.student-view');
 
-    if (emailUsuario === EMAIL_DOCENTE) {
-        // SOS EL DOCENTE: Mostramos herramientas de edición y entregas de alumnos
-        vistasAdmin.forEach(el => el.style.display = 'block');
-        vistasEstudiante.forEach(el => el.style.display = 'none'); // El docente no necesita entregar tareas
-        console.log("Modo: Docente habilitado.");
+    if (rol === "docente") {
+        // PERMISOS DE DOCENTE: Ve herramientas de edición y paneles de corrección
+        elementosDocente.forEach(el => el.style.display = 'block');
+        elementosEstudiante.forEach(el => el.style.display = 'none'); 
+        
+        // Ejecuta tus funciones de gestión
+        cargarControlesVisibilidad();
+        cargarTodasLasEntregas();
     } else {
-        // ES UN ALUMNO: Ocultamos lo del admin y aseguramos la vista de estudiante
-        vistasAdmin.forEach(el => el.style.display = 'none');
-        vistasEstudiante.forEach(el => el.style.display = 'block');
-        console.log("Modo: Estudiante habilitado.");
+        // PERMISOS DE ESTUDIANTE: Solo ve el material permitido y su zona de entrega
+        elementosDocente.forEach(el => el.style.display = 'none');
+        elementosEstudiante.forEach(el => el.style.display = 'block');
+        
+        // Aplica el filtro para ocultar las unidades desactivadas por el docente
+        aplicarRestriccionesAlumno();
     }
 }
 
