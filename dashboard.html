@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel del Curso - Data Studio</title>
+</head>
+<body>
+    <!-- Encabezado del Curso -->
+    <header>
+        <h1>Curso Práctico de Data Studio</h1>
+        <p>Domina la visualización de datos, la conexión de fuentes y la creación de reportes automatizados.</p>
+    </header>
+
+    <!-- Sección Sobre Mí (Información extraída de tu perfil profesional) -->
+    <section class="instructor-bio">
+        <h2>Tu Instructor</h2>
+        <div class="bio-content">
+            <p><strong>Iván de Souza Gago</strong></p>
+            <p>Especialista en Marketing Digital, analítica de datos y capacitador profesional. Con amplia experiencia en la optimización de estrategias digitales y la enseñanza de herramientas clave de Business Intelligence para la toma de decisiones estratégicas.</p>
+        </div>
+    </section>
+
+    <!-- Cronograma del Curso -->
+    <section class="schedule">
+        <h2>Cronograma de Clases</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Unidad</th>
+                    <th>Fecha de Clase en Vivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Unidad 1: Introducción y Conexión de Datos</td><td>Sábado 6 de Junio - 10:00 hs</td></tr>
+                <tr><td>Unidad 2: Dimensiones, Métricas y Gráficos</td><td>Sábado 13 de Junio - 10:00 hs</td></tr>
+                <tr><td>Unidad 3: Combinación de Datos y Filtros Avanzados</td><td>Sábado 20 de Junio - 10:00 hs</td></tr>
+                <tr><td>Unidad 4: Diseño de Tableros y Compartición</td><td>Sábado 27 de Junio - 10:00 hs</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Bloque de Unidad (Se repite para las 4 unidades) -->
+    <!-- NOTA: El atributo data-visible se controlará con JS o Backend para habilitar/deshabilitar -->
+    <section class="unit-section" id="unidad1" data-visible="true">
+        <div class="unit-header">
+            <h2>Unidad 1: Introducción a la Visualización</h2>
+            <!-- Este botón solo lo ve el Docente -->
+            <button class="admin-only toggle-btn">Ocultar Unidad</button>
+        </div>
+        <p class="unit-description">Conceptos fundamentales de BI y los primeros pasos en la interfaz.</p>
+        
+        <!-- Materiales -->
+        <div class="unit-resources">
+            <h3>Material de Clase</h3>
+            <a href="#" class="download-link">📥 Descargar PDF de la Unidad</a>
+            <div class="video-responsive">
+                <!-- Ejemplo de video embebido -->
+                <iframe src="https://www.youtube.com/embed/ejemplo" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- Zona de Trabajos Prácticos (Vista Dinámica) -->
+        <div class="unit-assignment">
+            <h3>Trabajo Práctico Nº 1</h3>
+            <p class="assignment-prompt"><strong>Consigna:</strong> Conecta tu primera fuente de datos de Google Analytics y genera un gráfico de líneas.</p>
+            
+            <!-- VISTA ALUMNO (Se muestra si el rol es 'student') -->
+            <div class="student-view">
+                <form class="upload-assignment-form">
+                    <label>Subir archivo (PDF/ZIP):</label>
+                    <input type="file">
+                    <label>O comparte el link de tu reporte de Looker Studio:</label>
+                    <input type="url" placeholder="https://lookerstudio.google.com/...">
+                    <button type="submit">Enviar Tarea</button>
+                </form>
+                <div class="feedback-box">
+                    <h4>Devolución del Docente:</h4>
+                    <p class="grade">Nota: <span id="nota-actual">Pendiente</span></p>
+                    <p class="comments">Aún no se han cargado comentarios.</p>
+                </div>
+            </div>
+
+            <!-- VISTA DOCENTE (Se muestra si el rol es 'admin') -->
+            <div class="admin-view" style="display:none;">
+                <h4>Entregas de los Alumnos</h4>
+                <ul class="student-submissions-list">
+                    <li>
+                        <strong>Alumno: Juan Pérez</strong> 
+                        <br>Entrega: <a href="#">Ver Archivo</a> o <a href="#" target="_blank">Abrir Link</a>
+                        <br>
+                        <form class="grade-form">
+                            <input type="number" placeholder="Nota" min="1" max="10">
+                            <textarea placeholder="Escribe la devolución aquí..."></textarea>
+                            <button type="submit">Calificar</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Foro de Consultas de la Unidad -->
+    <section class="forum-section">
+        <h3>Foro de Discusión</h3>
+        <div class="forum-messages">
+            <!-- Mensajes dinámicos de la Base de Datos -->
+        </div>
+        <form id="forumForm">
+            <textarea placeholder="Escribe tu consulta o respuesta..." required></textarea>
+            <button type="submit">Publicar en el Foro</button>
+        </form>
+    </section>
+</body>
+</html>
