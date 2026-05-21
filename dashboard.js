@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // 1. Configuración de Firebase
 const firebaseConfig = {
@@ -51,9 +51,12 @@ function aplicarPermisosEnPantalla(rol) {
     if (rol === "docente") {
         elementosDocente.forEach(el => el.style.display = 'block');
         elementosEstudiante.forEach(el => el.style.display = 'none'); 
+      document.querySelectorAll('.admin-view, .admin-only').forEach(el => {
+        el.style.display = 'block';
         
         cargarControlesVisibilidad();
         cargarTodasLasEntregas();
+        cargarEntregasParaDocente();
     } else {
         elementosDocente.forEach(el => el.style.display = 'none');
         elementosEstudiante.forEach(el => el.style.display = 'block');
@@ -61,6 +64,57 @@ function aplicarPermisosEnPantalla(rol) {
         aplicarRestriccionesAlumno();
     }
 }
+
+// FUNCION PARA LA ENTREGA DE LOS TRABAJOS
+
+function cargarEntregasParaDocente() {
+  const tablaU1 = document.getElementById('lista-entregas-u1');
+  if (!tablaU1) return;
+
+  // Escuchamos la colección "entregas" en tiempo real
+  onSnapshot(collection(db, "entregas"), (snapshot) => {
+    tablaU1.innerHTML = ""; // Limpiamos la tabla para que no se dupliquen las filas
+
+    if (snapshot.empty) {
+      tablaU1.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay entregas registradas aún.</td></tr>`;
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+      const entrega = docSnap.data();
+      const idEntrega = docSnap.id; // Es el UID del alumno
+
+      // Creamos una fila por cada entrega recibida
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td><strong>${entrega.emailAlumno || 'Alumno'}</strong><br><small style="color:gray;">${entrega.comentariosAlumno || ''}</small></td>
+        <td><a href="${entrega.linkLookerStudio}" target="_blank" class="download-link" style="padding: 5px 10px; font-size: 12px;">🔗 Ver Reporte</a></td>
+        <td><span class="badge-estado">${entrega.estado || 'Pendiente'}</span></td>
+        <td>
+          <button class="btn-toggle" style="padding: 4px 8px; font-size: 11px;" onclick="corregirEntrega('${idEntrega}')">Calificar</button>
+        </td>
+      `;
+      tablaU1.appendChild(fila);
+    });
+  });
+}
+
+// Hacemos la función de corrección accesible desde el HTML global
+window.corregirEntrega = async function(id) {
+  const nota = prompt("Introduce la nota o estado para este proyecto (Ej: Aprobado, 9/10, Rehacer):");
+  if (nota === null || nota.trim() === "") return; // Si cancela, no hace nada
+
+  try {
+    const entregaRef = doc(db, "entregas", id);
+    await updateDoc(entregaRef, {
+      estado: nota
+    });
+    alert("¡Calificación actualizada con éxito!");
+  } catch (error) {
+    console.error("Error al calificar:", error);
+    alert("No se pudo guardar la nota. Revisa los permisos.");
+  }
+};
 
 // LOGICA PARA EL BOTÓN DE CERRAR SESIÓN
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
