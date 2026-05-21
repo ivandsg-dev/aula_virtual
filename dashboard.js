@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firestore.js";
 
 // 1. Tu misma configuración de Firebase
 const firebaseConfig = {
@@ -16,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // REGLA DE SEGURIDAD FÁCIL: Define aquí tu correo de docente
-const EMAIL_DOCENTE = "tu-email-de-linkedin-o-profesional@ejemplo.com"; 
+const EMAIL_DOCENTE = "ivandsg@gmail.com"; 
 
 // 2. Controlar quién está de visita en la página
 onAuthStateChanged(auth, (user) => {
