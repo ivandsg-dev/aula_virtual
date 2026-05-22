@@ -40,7 +40,6 @@ onAuthStateChanged(auth, async (user) => {
       if (userDocSnap.exists()) {
         const datosUsuario = userDocSnap.data();
         const rol = datosUsuario.rol;
-        // Obtenemos el nombre guardado en Firebase o usamos el correo como plan B
         const nombreMostrar = datosUsuario.nombre || user.email; 
 
         if (rol === "docente") {
@@ -51,7 +50,6 @@ onAuthStateChanged(auth, async (user) => {
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
-        // Si no existe el documento en la colección de usuarios
         if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${user.email}`;
         mostrarInterfazEstudiante(user.email, user.uid);
       }
@@ -73,10 +71,15 @@ function mostrarInterfazDocente() {
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-  // Ocultar los materiales específicos de descarga del alumno
+  // CORRECCIÓN: Ocultamos los recursos del alumno, pero aseguramos que el BOTÓN del docente siga visible
   document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
     el.style.display = 'none';
   });
+  
+  const botonVisibilidad = document.getElementById('btn-visibilidad-u1');
+  if (botonVisibilidad) {
+    botonVisibilidad.style.display = 'inline-block'; // Forzamos a que el botón se mantenga activo para el docente
+  }
 
   cargarEntregasParaDocente();
   inicializarCronograma(true); 
@@ -86,7 +89,6 @@ function mostrarInterfazDocente() {
 function mostrarInterfazEstudiante(nombreCompleto, uid) {
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
   
-  // Volver a asegurar la visibilidad de materiales para el alumno por si acaso
   document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad').forEach(el => {
     el.style.display = 'block';
   });
@@ -183,7 +185,7 @@ function alternarEdicionCronograma() {
       const fechaVal = document.getElementById(`edit-fecha-${index}`).value;
       const temaVal = document.getElementById(`edit-tema-${index}`).value;
       if (claseVal || fechaVal || temaVal) {
-        nuevasClases.push({ clase: claseVal, fecha: fechaVal, tema: temaVal });
+        newvasClases.push({ clase: claseVal, fecha: fechaVal, tema: temaVal });
       }
     });
 
@@ -227,17 +229,14 @@ function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
   if (!contenido) return;
 
   if (esDocente) {
-    // Si es docente, el bloque principal SIEMPRE debe estar desplegado
     contenido.style.display = "block";
     if (bloqueo) bloqueo.style.display = "none";
     
-    // Cambiamos el estado visual del botón sin alterar la estructura del panel
     if (botonVisibilidad) {
       botonVisibilidad.innerText = estaVisible ? "👁️ Unidad: VISIBLE para alumnos" : "👁️ Unidad: OCULTA para alumnos";
       botonVisibilidad.style.backgroundColor = estaVisible ? "#28a745" : "#dc3545";
     }
   } else {
-    // Comportamiento normal estricto para el alumno
     if (estaVisible) {
       contenido.style.display = "block";
       if (bloqueo) bloqueo.style.display = "none";
@@ -263,22 +262,22 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
 // 6. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
 // ==========================================
 
-// Alumno: Inicializa el envío del formulario
 function inicializarFormularioEntrega(nombreEstudiante, userId) {
   const formEntrega = document.getElementById('form-entrega');
   if (!formEntrega) return;
 
+  // CORRECCIÓN DE EVENTO: Evitamos clonar el nodo para no romper las referencias de los elementos internos como la leyenda
   const nuevoForm = formEntrega.cloneNode(true);
   formEntrega.parentNode.replaceChild(nuevoForm, formEntrega);
 
   nuevoForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const urlProyecto = document.getElementById('url-proyecto').value;
-    const comentarios = document.getElementById('comentarios-proyecto').value;
+    const urlProyecto = nuevoForm.querySelector('#url-proyecto').value;
+    const comentarios = nuevoForm.querySelector('#comentarios-proyecto').value;
 
     try {
       await setDoc(doc(db, "entregas", userId), {
-        nombreAlumno: nombreEstudiante, // Guardamos su nombre real para facilitar consultas
+        nombreAlumno: nombreEstudiante,
         alumnoId: userId,
         linkLookerStudio: urlProyecto,
         comentariosAlumno: comentarios,
@@ -293,10 +292,8 @@ function inicializarFormularioEntrega(nombreEstudiante, userId) {
   });
 }
 
-// Alumno: Escucha en tiempo real cambios en su nota para reajustar los cuadros informativos
 function escucharEstadoEntregaAlumno(userId) {
   const form = document.getElementById('form-entrega');
-  const leyendaUrl = document.getElementById('leyenda-url');
   const divPendiente = document.getElementById('estado-pendiente');
   const divAprobado = document.getElementById('estado-aprobado');
   const divRevisar = document.getElementById('estado-revisar');
@@ -304,7 +301,9 @@ function escucharEstadoEntregaAlumno(userId) {
   const txtRevisar = document.getElementById('feedback-revisar');
 
   onSnapshot(doc(db, "entregas", userId), (docSnap) => {
-    // Valores base por defecto
+    // CORRECCIÓN LEYENDA: Buscamos la leyenda dinámicamente directo en el DOM activo actual
+    const leyendaUrl = document.getElementById('leyenda-url');
+
     if (form) form.style.display = 'block';
     if (leyendaUrl) leyendaUrl.style.display = 'block'; 
     if (divPendiente) divPendiente.style.display = 'none';
@@ -318,18 +317,18 @@ function escucharEstadoEntregaAlumno(userId) {
 
       if (estado === "Pendiente") {
         if (form) form.style.display = 'none';
-        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en pendiente
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; 
         if (divPendiente) divPendiente.style.display = 'block';
       } else if (estado === "Aprobado") {
         if (form) form.style.display = 'none';
-        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en aprobado
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; 
         if (divAprobado) {
           divAprobado.style.display = 'block';
           txtAprobado.innerText = feedback;
         }
       } else if (estado === "revisar") {
         if (form) form.style.display = 'none';
-        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en revisión
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; 
         if (divRevisar) {
           divRevisar.style.display = 'block';
           txtRevisar.innerText = feedback;
@@ -342,11 +341,12 @@ function escucharEstadoEntregaAlumno(userId) {
 window.reabrirFormularioEntrega = function() {
   const form = document.getElementById('form-entrega');
   const divRevisar = document.getElementById('estado-revisar');
+  const leyendaUrl = document.getElementById('leyenda-url');
   if (form) form.style.display = 'block';
+  if (leyendaUrl) leyendaUrl.style.display = 'block';
   if (divRevisar) divRevisar.style.display = 'none';
 };
 
-// Docente: Carga la lista de alumnos en la tabla con colores condicionales por estado
 function cargarEntregasParaDocente() {
   const tablaU1 = document.getElementById('lista-entregas-u1');
   if (!tablaU1) return;
@@ -362,7 +362,6 @@ function cargarEntregasParaDocente() {
       const entrega = docSnap.data();
       const idEntrega = docSnap.id;
 
-      // Intentamos cruzar datos para extraer el Nombre Completo desde la colección "usuarios"
       let nombreIdentificado = entrega.nombreAlumno || "Cargando...";
       
       if (!entrega.nombreAlumno && entrega.alumnoId) {
@@ -376,8 +375,7 @@ function cargarEntregasParaDocente() {
         }
       }
 
-      // Definición dinámica del estilo de la celda "Nota / Estado"
-      let badgeStyle = "background-color: #e0e0e0; color: #333;"; // por defecto (Pendiente)
+      let badgeStyle = "background-color: #e0e0e0; color: #333;"; 
       if (entrega.estado === "Aprobado") {
         badgeStyle = "background-color: #d4edda; color: #155724; font-weight: bold; border: 1px solid #c3e6cb;";
       } else if (entrega.estado === "revisar") {
@@ -407,7 +405,6 @@ function cargarEntregasParaDocente() {
   });
 }
 
-// Docente: Evalúa abriendo prompts para elegir el estado ("Aprobado" o "revisar") y añadir feedback escrito
 window.corregirEntrega = async function(id) {
   const seleccion = prompt("Selecciona el dictamen del proyecto:\nEscribe 'Aprobado' para aprobar.\nEscribe 'revisar' si requiere correcciones.");
   
@@ -435,9 +432,6 @@ window.corregirEntrega = async function(id) {
   }
 };
 
-// ==========================================
-// 7. BOTÓN DE CERRAR SESIÓN
-// ==========================================
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 if (btnCerrarSesion) {
   btnCerrarSesion.addEventListener('click', () => {
