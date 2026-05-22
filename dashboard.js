@@ -2,10 +2,8 @@
 // 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { updatePassword } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js"; // Ajustá a tu versión de Firebase
-import { updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-firestore.js";
 
 // ==========================================
 // 2. CONFIGURACIÓN DE FIREBASE
@@ -29,6 +27,10 @@ let datosCronogramaLocal = [];
 
 // Variables globales para guardar datos del alumno y evitar colisiones de eventos
 let alumnoDatosEnvio = { nombre: "", uid: "" };
+
+// ==========================================
+// 3. LOGICA DE CONTROL DE PRIMER LOGIN
+// ==========================================
 
 // 1. FUNCIÓN DE CONTROL AL MOMENTO DEL LOGIN
 async function verificarPrimerLogin(userAuth) {
@@ -59,9 +61,10 @@ async function verificarPrimerLogin(userAuth) {
 }
 
 // 2. CONFIGURACIÓN DEL FORMULARIO DE CAMBIO DE CLAVE
-function configurarFormularioCambioClave(userAuth, userDocRef) {
+function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
   const form = document.getElementById("form-cambio-obligatorio");
   const txtError = document.getElementById("error-cambio-clave");
+  const txtSaludo = document.getElementById('saludo-usuario');
 
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -70,7 +73,6 @@ function configurarFormularioCambioClave(userAuth, userDocRef) {
     const nuevaClave = document.getElementById("nueva-clave").value;
     const confirmarClave = document.getElementById("confirmar-clave").value;
 
-    // Validación básica en frontend
     if (nuevaClave !== confirmarClave) {
       txtError.innerText = "❌ Las contraseñas no coinciden.";
       txtError.style.display = "block";
@@ -81,23 +83,26 @@ function configurarFormularioCambioClave(userAuth, userDocRef) {
       // A. Actualizamos la contraseña en Firebase Authentication
       await updatePassword(userAuth, nuevaClave);
 
-      // B. Actualizamos el flag en Firestore para que no vuelva a pedirlo
+      // B. Actualizamos el flag en Firestore (con merge:true por si el documento es nuevo)
       await updateDoc(userDocRef, {
         primerLogin: false
+      }).catch(async () => {
+        // Salvavidas: Si el documento no existía en Firestore, lo creamos
+        await setDoc(userDocRef, { nombre: nombreMostrar, rol: "estudiante", primerLogin: false }, { merge: true });
       });
 
-      // C. Liberamos la pantalla y dejamos que acceda al dashboard
+      // C. Liberamos la pantalla de bloqueo
       document.getElementById("pantalla-primer-login").style.display = "none";
       alert("¡Contraseña actualizada con éxito! Bienvenido al curso.");
       
-      // Aquí puedes llamar a tu función existente que carga el dashboard normalmente
-      // inicializarDashboard(userAuth);
+      // D. ¡DESTRABAMOS LA CARGA! Ejecutamos tus funciones originales del Alumno
+      if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+      mostrarInterfazEstudiante(nombreMostrar, userAuth.uid);
 
     } catch (error) {
       console.error("Error al cambiar la contraseña:", error);
-      // Firebase exige un login reciente para cambiar clave. Si pasa mucho tiempo tirará error.
       if (error.code === "auth/requires-recent-login") {
-        txtError.innerText = "❌ Por seguridad, reasienta tu sesión antes de cambiar la clave.";
+        txtError.innerText = "❌ Por seguridad, cierra sesión e ingresa nuevamente antes de cambiar la clave.";
       } else {
         txtError.innerText = `❌ Error: ${error.message}`;
       }
@@ -127,12 +132,29 @@ onAuthStateChanged(auth, async (user) => {
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
         } else {
+          // =========================================================
+          // FILTRO DE SEGURIDAD: CONTROL DE PRIMER LOGIN (ALUMNOS)
+          // =========================================================
+          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+            // 1. Mostramos la pantalla de bloqueo
+            document.getElementById("pantalla-primer-login").style.display = "flex";
+            
+            // 2. Preparamos el formulario y le pasamos los datos para que sepa qué hacer al terminar con éxito
+            configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
+            
+            // 3. Freno de mano: no llamamos a mostrarInterfazEstudiante todavía
+            return; 
+          }
+          // =========================================================
+
+          // Si ya cambió la clave antes, entra directo de forma normal
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
-        if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${user.email}`;
-        mostrarInterfazEstudiante(user.email, user.uid);
+        // Si el usuario no existe en Firestore, por defecto es alumno sin primerLogin definido
+        document.getElementById("pantalla-primer-login").style.display = "flex";
+        configurarFormularioCambioClave(user, userDocRef, user.email);
       }
     } catch (error) {
       console.error("Error al obtener el rol o nombre:", error);
@@ -140,7 +162,9 @@ onAuthStateChanged(auth, async (user) => {
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
-    window.location.href = "index.html";
+    // Si no hay usuario y ya estás en index.html, no redirigimos para evitar bucles infinitos.
+    // Solo redirigir si tu lógica de login (por ejemplo un contenedor oculto) lo requiere.
+    console.log("No hay usuario autenticado.");
   }
 });
 
