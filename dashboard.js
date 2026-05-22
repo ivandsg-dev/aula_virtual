@@ -29,6 +29,8 @@ let datosCronogramaLocal = [];
 // 3. VISTAS Y ROLES: CONTROL DE FLUJO
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
+  const txtSaludo = document.getElementById('saludo-usuario');
+  
   if (user) {
     console.log("Usuario autenticado:", user.email);
     try {
@@ -38,17 +40,24 @@ onAuthStateChanged(auth, async (user) => {
       if (userDocSnap.exists()) {
         const datosUsuario = userDocSnap.data();
         const rol = datosUsuario.rol;
+        // Obtenemos el nombre guardado en Firebase o usamos el correo como plan B
+        const nombreMostrar = datosUsuario.nombre || user.email; 
 
         if (rol === "docente") {
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
         } else {
-          mostrarInterfazEstudiante(user.email, user.uid);
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+          mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
+        // Si no existe el documento en la colección de usuarios
+        if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${user.email}`;
         mostrarInterfazEstudiante(user.email, user.uid);
       }
     } catch (error) {
-      console.error("Error al obtener el rol:", error);
+      console.error("Error al obtener el rol o nombre:", error);
+      if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
@@ -57,22 +66,37 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function mostrarInterfazDocente() {
+  // Mostrar lo correspondiente al administrador
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
+  
+  // Ocultar formulario de entregas de alumno
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
+
+  // NUEVO: Ocultar materiales de descarga y detalle de la unidad para el rol docente
+  // (Ajusta estos selectores de clase/ID según uses en tu HTML para esos bloques)
+  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad, .student-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
   cargarEntregasParaDocente();
   inicializarCronograma(true); 
   inicializarVisibilidadUnidades(true);
 }
 
-function mostrarInterfazEstudiante(email, uid) {
+function mostrarInterfazEstudiante(nombreCompleto, uid) {
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
+  
+  // Volver a asegurar la visibilidad de materiales para el alumno por si acaso
+  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad').forEach(el => {
+    el.style.display = 'block';
+  });
+
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'block';
 
-  inicializarFormularioEntrega(email, uid);
-  escucharEstadoEntregaAlumno(uid); // Escucha en tiempo real si el docente lo califica
+  inicializarFormularioEntrega(nombreCompleto, uid);
+  escucharEstadoEntregaAlumno(uid); 
   inicializarCronograma(false); 
   inicializarVisibilidadUnidades(false);
 }
@@ -237,7 +261,7 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
 // ==========================================
 
 // Alumno: Inicializa el envío del formulario
-function inicializarFormularioEntrega(userEmail, userId) {
+function inicializarFormularioEntrega(nombreEstudiante, userId) {
   const formEntrega = document.getElementById('form-entrega');
   if (!formEntrega) return;
 
@@ -251,13 +275,13 @@ function inicializarFormularioEntrega(userEmail, userId) {
 
     try {
       await setDoc(doc(db, "entregas", userId), {
-        emailAlumno: userEmail,
+        nombreAlumno: nombreEstudiante, // Guardamos su nombre real para facilitar consultas
         alumnoId: userId,
         linkLookerStudio: urlProyecto,
         comentariosAlumno: comentarios,
         fecha: new Date().toISOString(),
-        estado: "Pendiente", // Estado inicial base
-        feedbackDocente: ""  // Inicialmente vacío
+        estado: "Pendiente", 
+        feedbackDocente: ""  
       });
       alert("¡Proyecto enviado a evaluación!");
     } catch (error) {
@@ -269,6 +293,7 @@ function inicializarFormularioEntrega(userEmail, userId) {
 // Alumno: Escucha en tiempo real cambios en su nota para reajustar los cuadros informativos
 function escucharEstadoEntregaAlumno(userId) {
   const form = document.getElementById('form-entrega');
+  const leyendaUrl = document.getElementById('leyenda-url');
   const divPendiente = document.getElementById('estado-pendiente');
   const divAprobado = document.getElementById('estado-aprobado');
   const divRevisar = document.getElementById('estado-revisar');
@@ -276,8 +301,9 @@ function escucharEstadoEntregaAlumno(userId) {
   const txtRevisar = document.getElementById('feedback-revisar');
 
   onSnapshot(doc(db, "entregas", userId), (docSnap) => {
-    // Ocultamos todos los elementos por defecto para resetear la vista
+    // Reset por defecto
     if (form) form.style.display = 'block';
+    if (leyendaUrl) leyendaUrl.style.display = 'block'; // Volver a mostrar leyenda por defecto
     if (divPendiente) divPendiente.style.display = 'none';
     if (divAprobado) divAprobado.style.display = 'none';
     if (divRevisar) divRevisar.style.display = 'none';
@@ -292,6 +318,7 @@ function escucharEstadoEntregaAlumno(userId) {
         if (divPendiente) divPendiente.style.display = 'block';
       } else if (estado === "Aprobado") {
         if (form) form.style.display = 'none';
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; // NUEVO: Quitar la leyenda si fue Aprobado
         if (divAprobado) {
           divAprobado.style.display = 'block';
           txtAprobado.innerText = feedback;
@@ -307,7 +334,6 @@ function escucharEstadoEntregaAlumno(userId) {
   });
 }
 
-// Función auxiliar por si el alumno hace clic en "Volver a presentar tarea"
 window.reabrirFormularioEntrega = function() {
   const form = document.getElementById('form-entrega');
   const divRevisar = document.getElementById('estado-revisar');
@@ -315,7 +341,7 @@ window.reabrirFormularioEntrega = function() {
   if (divRevisar) divRevisar.style.display = 'none';
 };
 
-// Docente: Carga la lista de alumnos entregados
+// Docente: Carga la lista de alumnos en la tabla con colores condicionales por estado
 function cargarEntregasParaDocente() {
   const tablaU1 = document.getElementById('lista-entregas-u1');
   if (!tablaU1) return;
@@ -323,21 +349,52 @@ function cargarEntregasParaDocente() {
   onSnapshot(collection(db, "entregas"), (snapshot) => {
     tablaU1.innerHTML = "";
     if (snapshot.empty) {
-      tablaU1.innerHTML = `<tr><td colspan="4" style="text-align:center;">No hay entregas registradas aún.</td></tr>`;
+      tablaU1.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 15px;">No hay entregas registradas aún.</td></tr>`;
       return;
     }
 
-    snapshot.forEach((docSnap) => {
+    snapshot.forEach(async (docSnap) => {
       const entrega = docSnap.data();
       const idEntrega = docSnap.id;
 
+      // Intentamos cruzar datos para extraer el Nombre Completo desde la colección "usuarios"
+      let nombreIdentificado = entrega.nombreAlumno || "Cargando...";
+      
+      if (!entrega.nombreAlumno && entrega.alumnoId) {
+        try {
+          const uSnap = await getDoc(doc(db, "usuarios", entrega.alumnoId));
+          if (uSnap.exists()) {
+            nombreIdentificado = uSnap.data().nombre || "Alumno Sin Nombre";
+          }
+        } catch (e) {
+          nombreIdentificado = "Error al identificar";
+        }
+      }
+
+      // Definición dinámica del estilo de la celda "Nota / Estado"
+      let badgeStyle = "background-color: #e0e0e0; color: #333;"; // por defecto (Pendiente)
+      if (entrega.estado === "Aprobado") {
+        badgeStyle = "background-color: #d4edda; color: #155724; font-weight: bold; border: 1px solid #c3e6cb;";
+      } else if (entrega.estado === "revisar") {
+        badgeStyle = "background-color: #f8d7da; color: #721c24; font-weight: bold; border: 1px solid #f5c6cb;";
+      }
+
       const fila = document.createElement('tr');
+      fila.style.borderBottom = "1px solid #dee2e6";
+      
       fila.innerHTML = `
-        <td><strong>${entrega.emailAlumno || 'Alumno'}</strong><br><small style="color:gray;">${entrega.comentariosAlumno || ''}</small></td>
-        <td><a href="${entrega.linkLookerStudio}" target="_blank" class="download-link" style="padding: 5px 10px; font-size: 12px; text-decoration: none;">🔗 Ver Reporte</a></td>
-        <td><span style="background: #e0e0e0; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight:bold;">${entrega.estado}</span></td>
-        <td>
-          <button class="btn-logout" style="padding: 4px 8px; font-size: 11px; background: #007bff;" onclick="corregirEntrega('${idEntrega}')">Evaluar</button>
+        <td style="padding: 10px;">
+          <strong>${nombreIdentificado}</strong><br>
+          <small style="color:gray; max-width: 250px; display:block; word-wrap:break-word;">${entrega.comentariosAlumno || 'Sin comentarios'}</small>
+        </td>
+        <td style="padding: 10px;">
+          <a href="${entrega.linkLookerStudio}" target="_blank" style="padding: 5px 10px; font-size: 12px; text-decoration: none; background: #e9ecef; border: 1px solid #ced4da; color: #495057; border-radius:4px;">🔗 Ver Reporte</a>
+        </td>
+        <td style="padding: 10px; text-align: center; ${badgeStyle}">
+          ${entrega.estado.toUpperCase()}
+        </td>
+        <td style="padding: 10px; text-align: center;">
+          <button style="padding: 6px 12px; font-size: 11px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight:bold;" onclick="corregirEntrega('${idEntrega}')">Evaluar</button>
         </td>
       `;
       tablaU1.appendChild(fila);
@@ -349,11 +406,11 @@ function cargarEntregasParaDocente() {
 window.corregirEntrega = async function(id) {
   const seleccion = prompt("Selecciona el dictamen del proyecto:\nEscribe 'Aprobado' para aprobar.\nEscribe 'revisar' si requiere correcciones.");
   
-  if (seleccion === null) return; // Cancelado
+  if (seleccion === null) return; 
   
   const estadoFinal = seleccion.trim();
   if (estadoFinal !== "Aprobado" && estadoFinal !== "revisar") {
-    alert("Opción inválida. Debes escribir exactamente 'Aprobado' o 'revisar' (respetando minúsculas/mayúsculas).");
+    alert("Opción inválida. Debes escribir exactamente 'Aprobado' o 'revisar'.");
     return;
   }
 
