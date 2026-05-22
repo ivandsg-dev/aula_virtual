@@ -4,6 +4,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { updatePassword } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js"; // Ajustá a tu versión de Firebase
+import { updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-firestore.js";
 
 // ==========================================
 // 2. CONFIGURACIÓN DE FIREBASE
@@ -27,6 +29,82 @@ let datosCronogramaLocal = [];
 
 // Variables globales para guardar datos del alumno y evitar colisiones de eventos
 let alumnoDatosEnvio = { nombre: "", uid: "" };
+
+// 1. FUNCIÓN DE CONTROL AL MOMENTO DEL LOGIN
+async function verificarPrimerLogin(userAuth) {
+  try {
+    // Buscamos el documento del usuario en Firestore para ver su estado
+    const userDocRef = doc(db, "usuarios", userAuth.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists()) {
+      const datosUsuario = userDocSnap.data();
+
+      // Si el flag 'primerLogin' es true (o no existe aún en su registro), bloqueamos la pantalla
+      if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+        
+        // Ocultamos el dashboard principal por si acaso y mostramos el bloqueo
+        document.getElementById("pantalla-primer-login").style.display = "flex";
+        
+        // Inicializamos el escuchador del formulario de cambio de clave
+        configurarFormularioCambioClave(userAuth, userDocRef);
+        return true; // Es primer login
+      }
+    }
+    return false; // Ya pasó por esto antes
+  } catch (error) {
+    console.error("Error verificando perfil del usuario:", error);
+    return false;
+  }
+}
+
+// 2. CONFIGURACIÓN DEL FORMULARIO DE CAMBIO DE CLAVE
+function configurarFormularioCambioClave(userAuth, userDocRef) {
+  const form = document.getElementById("form-cambio-obligatorio");
+  const txtError = document.getElementById("error-cambio-clave");
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    txtError.style.display = "none";
+
+    const nuevaClave = document.getElementById("nueva-clave").value;
+    const confirmarClave = document.getElementById("confirmar-clave").value;
+
+    // Validación básica en frontend
+    if (nuevaClave !== confirmarClave) {
+      txtError.innerText = "❌ Las contraseñas no coinciden.";
+      txtError.style.display = "block";
+      return;
+    }
+
+    try {
+      // A. Actualizamos la contraseña en Firebase Authentication
+      await updatePassword(userAuth, nuevaClave);
+
+      // B. Actualizamos el flag en Firestore para que no vuelva a pedirlo
+      await updateDoc(userDocRef, {
+        primerLogin: false
+      });
+
+      // C. Liberamos la pantalla y dejamos que acceda al dashboard
+      document.getElementById("pantalla-primer-login").style.display = "none";
+      alert("¡Contraseña actualizada con éxito! Bienvenido al curso.");
+      
+      // Aquí puedes llamar a tu función existente que carga el dashboard normalmente
+      // inicializarDashboard(userAuth);
+
+    } catch (error) {
+      console.error("Error al cambiar la contraseña:", error);
+      // Firebase exige un login reciente para cambiar clave. Si pasa mucho tiempo tirará error.
+      if (error.code === "auth/requires-recent-login") {
+        txtError.innerText = "❌ Por seguridad, reasienta tu sesión antes de cambiar la clave.";
+      } else {
+        txtError.innerText = `❌ Error: ${error.message}`;
+      }
+      txtError.style.display = "block";
+    }
+  };
+}
 
 // ==========================================
 // 3. VISTAS Y ROLES: CONTROL DE FLUJO
