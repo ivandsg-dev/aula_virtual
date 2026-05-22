@@ -77,32 +77,53 @@
             <div id="contenido-unidad-1" class="contenido-unidad">
                 <p class="unit-description">Conceptos fundamentales de visualización de datos y conexión de fuentes.</p>
                 <div class="unit-resources">
-                    <a href="#" class="download-link">📂 Descargar Plantilla Lego Core</a>
                     <a href="#" class="download-link">📥 Descargar PDF Unidad 1</a>
                     
                     <!-- Formulario de Entregas (Solo para Alumnos) -->
-                    <div id="vista-estudiante" class="dashboard-section" style="margin-top: 20px;">
+                    <div id="vista-estudiante" style="display: none; max-width: 600px; margin-top: 20px;">
                         <h2>Entregar Proyecto Final</h2>
                         <p>Copia y pega el enlace para compartir de tu reporte de Looker Studio.</p>
                         
-                        <form id="form-entrega">
-                            <div class="form-group">
-                                <label for="url-proyecto">Enlace de Looker Studio:</label>
-                                <input type="url" id="url-proyecto" placeholder="https://lookerstudio.google.com/..." required>
-                            </div>
-                            <div class="form-group">
-                                <label for="comentarios-proyecto">Comentarios u observaciones (Opcional):</label>
-                                <textarea id="comentarios-proyecto" rows="3" placeholder="Algo que quieras comentarle al docente sobre tus datos..."></textarea>
-                            </div>
-                            <button type="submit" id="btn-enviar-tarea">Enviar Proyecto</button>
-                        </form>
-                        
-                        <div id="mensaje-exito" style="display: none; color: green; margin-top: 10px;">
-                            ¡Proyecto entregado con éxito! El docente ya puede revisar tus visualizaciones.
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- FORMULARIO DE ENTREGA (Se ocultará tras enviar) -->
+  <form id="form-entrega" style="width: 100%;">
+    <div style="margin-bottom: 15px;">
+      <label for="url-proyecto" style="display: block; font-weight: bold; margin-bottom: 5px;">Enlace de Looker Studio:</label>
+      <input type="url" id="url-proyecto" required maxlength="200" placeholder="https://lookerstudio.google.com/..." style="width: 100%; box-sizing: border-box; padding: 8px;">
+      <small style="color: gray; display: block; margin-top: 2px;">Permite visualizar y cargar URLs largas (Hasta 200 caracteres).</small>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+      <label for="comentarios-proyecto" style="display: block; font-weight: bold; margin-bottom: 5px;">Comentarios u observaciones (Opcional):</label>
+      <textarea id="comentarios-proyecto" rows="4" placeholder="Déjale una nota a tu docente sobre tu reporte..." style="width: 100%; box-sizing: border-box; padding: 8px; resize: vertical;"></textarea>
+    </div>
+
+    <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Enviar Proyecto</button>
+  </form>
+
+  <!-- PANELES DE ESTADO (Se muestran dinámicamente con JS) -->
+  <div id="estado-pendiente" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; font-weight: bold; text-align: center;">
+    ⏳ Pendiente evaluación
+  </div>
+
+  <div id="estado-aprobado" style="display: none; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
+    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px; text-align: center;">✅ ¡Aprobado!</div>
+    <div style="border-top: 1px solid #c3e6cb; margin-top: 10px; padding-top: 10px;">
+      <strong>Feedback del docente:</strong>
+      <p id="feedback-aprobado" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic;"></p>
+    </div>
+  </div>
+
+  <div id="estado-revisar" style="display: none; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
+    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px; text-align: center;">⚠️ Revisar</div>
+    <div style="border-top: 1px solid #f5c6cb; margin-top: 10px; padding-top: 10px; margin-bottom: 15px;">
+      <strong>Indicaciones del docente:</strong>
+      <p id="feedback-revisar" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic;"></p>
+    </div>
+    <!-- Botón para permitir volver a enviar si está en revisión -->
+    <button onclick="reabrirFormularioEntrega()" style="padding: 6px 12px; background-color: #721c24; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Volver a presentar tarea</button>
+  </div>
+
+</div>
             
             <!-- Alerta alternativa de bloqueo -->
             <div id="bloqueo-unidad-1" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
