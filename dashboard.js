@@ -72,6 +72,33 @@ function inicializarCronograma(esDocente) {
     btnEditar.onclick = () => alternarEdicionCronograma();
   }
 
+  function mostrarInterfazDocente() {
+  // 1. Mostrar elementos de administración corporativa
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
+  
+  // Ocultar formulario de entregas
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'none';
+
+  // 2. Ejecutar cargadores pasando el parámetro de rol Docente (true)
+  cargarEntregasParaDocente();
+  inicializarCronograma(true); 
+  inicializarVisibilidadUnidades(true);
+}
+
+function mostrarInterfazEstudiante(email, uid) {
+  // 1. Ocultar herramientas exclusivas de profesor
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
+  
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'block';
+
+  // 2. Ejecutar cargadores pasando el parámetro de rol Docente (false)
+  inicializarFormularioEntrega(email, uid);
+  inicializarCronograma(false); 
+  inicializarVisibilidadUnidades(false);
+}
+
   // Escuchamos el documento fijo "curso/cronograma" en tu base de datos
   onSnapshot(doc(db, "configuracion", "cronograma"), (docSnap) => {
     if (!editandoCronograma) {
@@ -195,6 +222,70 @@ function mostrarInterfazDocente() {
   // Ocultamos el formulario de entregas del estudiante
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
+
+// Escuchar en tiempo real el estado de las unidades desde Firestore
+function inicializarVisibilidadUnidades(esDocente) {
+  onSnapshot(doc(db, "configuracion", "unidades_visibilidad"), (docSnap) => {
+    const estados = docSnap.exists() ? docSnap.data() : { unidad1: true, unidad2: true }; // Valores por defecto abiertos
+
+    // Aplicar lógica a la Unidad 1 (puedes replicar este bloque para U2, U3, etc.)
+    gestionarFiltroUnidad("unidad1", "1", estados.unidad1, esDocente);
+  });
+}
+
+function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
+  const contenido = document.getElementById(`contenido-unidad-${numeroId}`);
+  const bloqueo = document.getElementById(`bloqueo-unidad-${numeroId}`);
+  const botonVisibilidad = document.getElementById(`btn-visibilidad-u1`); // Reemplaza id dinámicamente si usas un bucle
+
+  if (!contenido) return;
+
+  if (esDocente) {
+    // El docente SIEMPRE ve el contenido, pero el botón le avisa cómo está para el alumno
+    contenido.style.display = "block";
+    if (bloqueo) bloqueo.style.display = "none";
+    
+    if (botonVisibilidad) {
+      if (estaVisible) {
+        botonVisibilidad.innerText = "👁️ Unidad: VISIBLE para alumnos";
+        botonVisibilidad.style.backgroundColor = "#28a745";
+      } else {
+        botonVisibilidad.innerText = "👁️ Unidad: OCULTA para alumnos";
+        botonVisibilidad.style.backgroundColor = "#dc3545";
+      }
+    }
+  } else {
+    // El ALUMNO sí sufre el bloqueo
+    if (estaVisible) {
+      contenido.style.display = "block";
+      if (bloqueo) bloqueo.style.display = "none";
+    } else {
+      contenido.style.display = "none";
+      if (bloqueo) bloqueo.style.display = "block";
+    }
+  }
+}
+
+// Acción del botón para cambiar el estado en la base de datos
+window.cambiarVisibilidadUnidad = async function(keyUnidad) {
+  const docRef = doc(db, "configuracion", "unidades_visibilidad");
+  try {
+    const docSnap = await getDoc(docRef);
+    let estadosActuales = docSnap.exists() ? docSnap.data() : { unidad1: true };
+    
+    // Invertimos el valor booleano actual
+    const nuevoEstado = !estadosActuales[keyUnidad];
+    
+    await setDoc(docRef, {
+      ...estadosActuales,
+      [keyUnidad]: nuevoEstado
+    }, { merge: true });
+    
+    console.log(`Estado de ${keyUnidad} cambiado a: ${nuevoEstado}`);
+  } catch (error) {
+    console.error("Error al cambiar visibilidad:", error);
+  }
+};
 
   // Cargamos las entregas de los alumnos en tiempo real
   cargarEntregasParaDocente();
