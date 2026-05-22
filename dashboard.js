@@ -25,6 +25,9 @@ const db = getFirestore(app);
 let editandoCronograma = false;
 let datosCronogramaLocal = [];
 
+// Variables globales para guardar datos del alumno y evitar colisiones de eventos
+let alumnoDatosEnvio = { nombre: "", uid: "" };
+
 // ==========================================
 // 3. VISTAS Y ROLES: CONTROL DE FLUJO
 // ==========================================
@@ -71,14 +74,20 @@ function mostrarInterfazDocente() {
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-  // CORRECCIÓN: Ocultamos los recursos del alumno, pero aseguramos que el BOTÓN del docente siga visible
+  // Ocultar los recursos del alumno
   document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
     el.style.display = 'none';
   });
   
+  // CORRECCIÓN BOTÓN DOCENTE: Si el botón estaba metido adentro de una sección oculta,
+  // lo extraemos y lo movemos temporalmente al panel de administración para que nunca quede inaccesible.
   const botonVisibilidad = document.getElementById('btn-visibilidad-u1');
+  const panelAdmin = document.querySelector('.admin-view');
   if (botonVisibilidad) {
-    botonVisibilidad.style.display = 'inline-block'; // Forzamos a que el botón se mantenga activo para el docente
+    botonVisibilidad.style.display = 'inline-block';
+    if (panelAdmin && !panelAdmin.contains(botonVisibilidad)) {
+      panelAdmin.insertBefore(botonVisibilidad, panelAdmin.firstChild);
+    }
   }
 
   cargarEntregasParaDocente();
@@ -185,7 +194,7 @@ function alternarEdicionCronograma() {
       const fechaVal = document.getElementById(`edit-fecha-${index}`).value;
       const temaVal = document.getElementById(`edit-tema-${index}`).value;
       if (claseVal || fechaVal || temaVal) {
-        newvasClases.push({ clase: claseVal, fecha: fechaVal, tema: temaVal });
+        nuevasClases.push({ clase: claseVal, fecha: fechaVal, tema: temaVal });
       }
     });
 
@@ -262,38 +271,44 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
 // 6. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
 // ==========================================
 
+// Manejador del submit unificado para evitar clonar nodos
+async function ejecutarEnvioFormulario(e) {
+  e.preventDefault();
+  const urlProyecto = document.getElementById('url-proyecto').value;
+  const comentarios = document.getElementById('comentarios-proyecto').value;
+
+  try {
+    await setDoc(doc(db, "entregas", alumnoDatosEnvio.uid), {
+      nombreAlumno: alumnoDatosEnvio.nombre,
+      alumnoId: alumnoDatosEnvio.uid,
+      linkLookerStudio: urlProyecto,
+      comentariosAlumno: comentarios,
+      fecha: new Date().toISOString(),
+      estado: "Pendiente", 
+      feedbackDocente: ""  
+    });
+    alert("¡Proyecto enviado a evaluación!");
+  } catch (error) {
+    console.error("Error al subir entrega:", error);
+  }
+}
+
 function inicializarFormularioEntrega(nombreEstudiante, userId) {
   const formEntrega = document.getElementById('form-entrega');
   if (!formEntrega) return;
 
-  // CORRECCIÓN DE EVENTO: Evitamos clonar el nodo para no romper las referencias de los elementos internos como la leyenda
-  const nuevoForm = formEntrega.cloneNode(true);
-  formEntrega.parentNode.replaceChild(nuevoForm, formEntrega);
+  // CORRECCIÓN TOTAL: Guardamos los datos en variables globales y usamos removeEventListener.
+  // Ya NO clonamos el elemento, por lo que los IDs internos permanecen intactos y únicos en el DOM.
+  alumnoDatosEnvio.nombre = nombreEstudiante;
+  alumnoDatosEnvio.uid = userId;
 
-  nuevoForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const urlProyecto = nuevoForm.querySelector('#url-proyecto').value;
-    const comentarios = nuevoForm.querySelector('#comentarios-proyecto').value;
-
-    try {
-      await setDoc(doc(db, "entregas", userId), {
-        nombreAlumno: nombreEstudiante,
-        alumnoId: userId,
-        linkLookerStudio: urlProyecto,
-        comentariosAlumno: comentarios,
-        fecha: new Date().toISOString(),
-        estado: "Pendiente", 
-        feedbackDocente: ""  
-      });
-      alert("¡Proyecto enviado a evaluación!");
-    } catch (error) {
-      console.error("Error al subir entrega:", error);
-    }
-  });
+  formEntrega.removeEventListener('submit', ejecutarEnvioFormulario);
+  formEntrega.addEventListener('submit', ejecutarEnvioFormulario);
 }
 
 function escucharEstadoEntregaAlumno(userId) {
   const form = document.getElementById('form-entrega');
+  const leyendaUrl = document.getElementById('leyenda-url');
   const divPendiente = document.getElementById('estado-pendiente');
   const divAprobado = document.getElementById('estado-aprobado');
   const divRevisar = document.getElementById('estado-revisar');
@@ -301,9 +316,7 @@ function escucharEstadoEntregaAlumno(userId) {
   const txtRevisar = document.getElementById('feedback-revisar');
 
   onSnapshot(doc(db, "entregas", userId), (docSnap) => {
-    // CORRECCIÓN LEYENDA: Buscamos la leyenda dinámicamente directo en el DOM activo actual
-    const leyendaUrl = document.getElementById('leyenda-url');
-
+    // Restablecer estados visuales base
     if (form) form.style.display = 'block';
     if (leyendaUrl) leyendaUrl.style.display = 'block'; 
     if (divPendiente) divPendiente.style.display = 'none';
@@ -315,6 +328,7 @@ function escucharEstadoEntregaAlumno(userId) {
       const estado = entrega.estado;
       const feedback = entrega.feedbackDocente || "Sin observaciones adicionales.";
 
+      // CORRECCIÓN LEYENDA: Al no haber clones, ocultar "leyendaUrl" afectará directamente al elemento real visible.
       if (estado === "Pendiente") {
         if (form) form.style.display = 'none';
         if (leyendaUrl) leyendaUrl.style.display = 'none'; 
