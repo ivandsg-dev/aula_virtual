@@ -66,20 +66,17 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function mostrarInterfazDocente() {
-  // Mostrar lo correspondiente al administrador
+  // Mostrar paneles de administración
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
   
-  // Ocultar formulario de entregas de alumno
+  // Ocultar la sección entera de entregas del estudiante
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-  // Usamos un pequeño retraso para asegurar que el DOM cargó los elementos antes de borrarlos
-  setTimeout(() => {
-    document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad, .student-only').forEach(el => {
-      el.style.display = 'none';
-    });
-    console.log("Materiales de estudiante ocultados para el docente.");
-  }, 100);
+  // Ocultar los materiales específicos de descarga del alumno
+  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
   cargarEntregasParaDocente();
   inicializarCronograma(true); 
@@ -230,13 +227,17 @@ function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
   if (!contenido) return;
 
   if (esDocente) {
+    // Si es docente, el bloque principal SIEMPRE debe estar desplegado
     contenido.style.display = "block";
     if (bloqueo) bloqueo.style.display = "none";
+    
+    // Cambiamos el estado visual del botón sin alterar la estructura del panel
     if (botonVisibilidad) {
       botonVisibilidad.innerText = estaVisible ? "👁️ Unidad: VISIBLE para alumnos" : "👁️ Unidad: OCULTA para alumnos";
       botonVisibilidad.style.backgroundColor = estaVisible ? "#28a745" : "#dc3545";
     }
   } else {
+    // Comportamiento normal estricto para el alumno
     if (estaVisible) {
       contenido.style.display = "block";
       if (bloqueo) bloqueo.style.display = "none";
@@ -303,9 +304,9 @@ function escucharEstadoEntregaAlumno(userId) {
   const txtRevisar = document.getElementById('feedback-revisar');
 
   onSnapshot(doc(db, "entregas", userId), (docSnap) => {
-    // Reset por defecto
+    // Valores base por defecto
     if (form) form.style.display = 'block';
-    if (leyendaUrl) leyendaUrl.style.display = 'block'; // Volver a mostrar leyenda por defecto
+    if (leyendaUrl) leyendaUrl.style.display = 'block'; 
     if (divPendiente) divPendiente.style.display = 'none';
     if (divAprobado) divAprobado.style.display = 'none';
     if (divRevisar) divRevisar.style.display = 'none';
@@ -317,16 +318,18 @@ function escucharEstadoEntregaAlumno(userId) {
 
       if (estado === "Pendiente") {
         if (form) form.style.display = 'none';
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en pendiente
         if (divPendiente) divPendiente.style.display = 'block';
       } else if (estado === "Aprobado") {
         if (form) form.style.display = 'none';
-        if (leyendaUrl) leyendaUrl.style.display = 'none'; // NUEVO: Quitar la leyenda si fue Aprobado
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en aprobado
         if (divAprobado) {
           divAprobado.style.display = 'block';
           txtAprobado.innerText = feedback;
         }
       } else if (estado === "revisar") {
         if (form) form.style.display = 'none';
+        if (leyendaUrl) leyendaUrl.style.display = 'none'; // Se oculta en revisión
         if (divRevisar) {
           divRevisar.style.display = 'block';
           txtRevisar.innerText = feedback;
