@@ -11,6 +11,8 @@
     <!-- Encabezado del Curso -->
     <header>
         <h1>Curso Práctico de Data Studio</h1>
+        <!-- Texto de bienvenida dinámica -->
+<h3 id="saludo-usuario" style="margin-top: 5px; color: #555; font-weight: normal;">Cargando usuario...</h3>
         <p>Domina la visualización de datos, la conexión de fuentes y la creación de reportes automatizados.</p>
         <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
     </header>
@@ -84,10 +86,13 @@
                         <h2>Entregar Proyecto Final</h2>
                         <p>Copia y pega el enlace para compartir de tu reporte de Looker Studio.</p>
                         
-<!-- FORMULARIO DE ENTREGA (Se ocultará tras enviar) -->
+<!-- FORMULARIO DE ENTREGA -->
   <form id="form-entrega" style="width: 100%;">
     <div style="margin-bottom: 15px;">
       <label for="url-proyecto" style="display: block; font-weight: bold; margin-bottom: 5px;">Enlace de Looker Studio:</label>
+      <!-- Leyenda con ID para poder ocultarla dinámicamente -->
+      <small id="leyenda-url" style="color: #666; display: block; margin-bottom: 5px;">Copia y pega el enlace para compartir de tu reporte de Looker Studio.</small>
+      
       <input type="url" id="url-proyecto" required maxlength="200" placeholder="https://lookerstudio.google.com/..." style="width: 100%; box-sizing: border-box; padding: 8px;">
       <small style="color: gray; display: block; margin-top: 2px;">Permite visualizar y cargar URLs largas (Hasta 200 caracteres).</small>
     </div>
@@ -100,31 +105,31 @@
     <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Enviar Proyecto</button>
   </form>
 
-  <!-- PANELES DE ESTADO (Se muestran dinámicamente con JS) -->
+  <!-- PANELES DE ESTADO INTERACTIVOS -->
   <div id="estado-pendiente" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; font-weight: bold; text-align: center;">
     ⏳ Pendiente evaluación
   </div>
 
-  <div id="estado-aprobado" style="display: none; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
-    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px; text-align: center;">✅ ¡Aprobado!</div>
+  <div id="estado-aprobado" style="display: none; background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 4px;">
+    <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;">✅ ¡Aprobado!</div>
     <div style="border-top: 1px solid #c3e6cb; margin-top: 10px; padding-top: 10px;">
       <strong>Feedback del docente:</strong>
-      <p id="feedback-aprobado" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic;"></p>
+      <!-- word-wrap evita que el texto rompa el diseño -->
+      <p id="feedback-aprobado" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic; word-wrap: break-word; white-space: pre-wrap;"></p>
     </div>
   </div>
 
-  <div id="estado-revisar" style="display: none; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
-    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px; text-align: center;">⚠️ Revisar</div>
+  <div id="estado-revisar" style="display: none; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 4px;">
+    <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;">⚠️ Revisar</div>
     <div style="border-top: 1px solid #f5c6cb; margin-top: 10px; padding-top: 10px; margin-bottom: 15px;">
       <strong>Indicaciones del docente:</strong>
-      <p id="feedback-revisar" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic;"></p>
+      <!-- word-wrap evita desbordes en la caja roja -->
+      <p id="feedback-revisar" style="margin: 5px 0 0 0; font-weight: normal; font-style: italic; word-wrap: break-word; white-space: pre-wrap;"></p>
     </div>
-    <!-- Botón para permitir volver a enviar si está en revisión -->
-    <button onclick="reabrirFormularioEntrega()" style="padding: 6px 12px; background-color: #721c24; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Volver a presentar tarea</button>
+    <button onclick="reabrirFormularioEntrega()" style="padding: 6px 12px; background-color: #721c24; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Volver a presentar tarea</button>
   </div>
 
-</div>
-            
+</div>            
             <!-- Alerta alternativa de bloqueo -->
             <div id="bloqueo-unidad-1" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
                 🔒 Esta unidad se encuentra oculta temporalmente por el docente.
@@ -132,15 +137,23 @@
         </div>
 
         <!-- Panel de corrección docente -->
-        <div class="admin-view center-correccion" style="display:none; margin-top: 20px;">
-            <h3>📋 Panel de Entregas - TP 1</h3>
-            <table>
-                <thead>
-                    <tr><th>Alumno</th><th>Entrega</th><th>Nota</th><th>Acción</th></tr>
-                </thead>
-                <tbody id="lista-entregas-u1"></tbody>
-            </table>
-        </div>
+<!-- Asegúrate de que el contenedor de tu tabla luzca similar a esto en tu panel de administrador -->
+<div class="admin-only" style="display: none; margin-top: 20px;">
+  <h3>Panel de Control de Entregas</h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 10px; text-align: left;">
+    <thead>
+      <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+        <th style="padding: 10px;">Alumno</th>
+        <th style="padding: 10px;">Proyecto</th>
+        <th style="padding: 10px; text-align: center;">Nota / Estado</th>
+        <th style="padding: 10px; text-align: center;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="lista-entregas-u1">
+      <!-- Se llena dinámicamente desde JavaScript -->
+    </tbody>
+  </table>
+</div>
     </section>
 
     <!-- UNIDAD 2 -->
