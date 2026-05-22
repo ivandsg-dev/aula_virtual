@@ -26,7 +26,14 @@
 
     <!-- Cronograma del Curso -->
     <section class="schedule">
-        <h2>Cronograma de Clases</h2>
+       <div class="dashboard-section">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h2>Cronograma de clases</h2>
+    <!-- Botón exclusivo para docentes -->
+    <button id="btn-editar-cronograma" class="admin-only" style="display: none; padding: 6px 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+      📝 Editar cronograma
+    </button>
+  </div>
         <table>
             <thead>
                 <tr>
