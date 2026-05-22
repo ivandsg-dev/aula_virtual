@@ -56,14 +56,31 @@
 
     <!-- UNIDAD 1 -->
     <section class="unit-section" id="unidad1">
-        <div class="unit-header">
-            <h2>Unidad 1: Introducción a Looker Studio</h2>
-            <div class="admin-only control-visibilidad" style="display:none;">
-                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad1')">
-                    Estado: <span id="estado-unidad1">Cargando...</span>
-                </button>
-            </div>
-        </div>
+<!-- EJEMPLO PARA LA UNIDAD 1 (Aplica el mismo patrón a las demás unidades) -->
+<div class="dashboard-section" id="modulo-unidad-1">
+  
+  <!-- 1. Botón de visibilidad (Exclusivo docente) encima del título -->
+  <div class="admin-only" style="display: none; margin-bottom: 10px;">
+    <button class="btn-toggle" id="btn-visibilidad-u1" onclick="cambiarVisibilidadUnidad('unidad1')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d;">
+      👁️ Visibilidad: Cargando...
+    </button>
+  </div>
+
+  <!-- 2. Título de la Unidad -->
+  <h2>Unidad 1: Introducción a la Visualización de Datos</h2>
+  
+  <!-- 3. CONTENEDOR DEL CONTENIDO: Todo lo que el alumno puede ver/descargar -->
+  <div id="contenido-unidad-1" class="contenido-unidad">
+    <p>Bienvenido a la unidad. Aquí tienes el material teórico y práctico...</p>
+    <a href="#" class="download-link">📂 Descargar Plantilla Lego Core</a>
+    <!-- ... Resto de tus enlaces de descarga y videos ... -->
+  </div>
+  
+  <!-- Mensaje de bloqueo alternativo que verá el alumno si la ocultas -->
+  <div id="bloqueo-unidad-1" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px;">
+    🔒 Esta unidad se encuentra oculta temporalmente por el docente.
+  </div>
+</div>
         <p class="unit-description">Conceptos fundamentales de visualización de datos y conexión de fuentes.</p>
         <div class="unit-resources">
             <a href="#" class="download-link">📥 Descargar PDF Unidad 1</a>
