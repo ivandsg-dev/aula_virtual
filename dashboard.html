@@ -26,88 +26,92 @@
 
     <!-- Cronograma del Curso -->
     <section class="schedule">
-       <div class="dashboard-section">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-    <h2>Cronograma de clases</h2>
-    <!-- Botón exclusivo para docentes -->
-    <button id="btn-editar-cronograma" class="admin-only" style="display: none; padding: 6px 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-      📝 Editar cronograma
-    </button>
-  </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Unidad</th>
-                    <th>Fecha de Clase en Vivo</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>Unidad 1: Introducción y Conexión de Datos</td><td>Sábado 6 de Junio - 10:00 hs</td></tr>
-                <tr><td>Unidad 2: Dimensiones, Métricas y Gráficos</td><td>Sábado 13 de Junio - 10:00 hs</td></tr>
-                <tr><td>Unidad 3: Combinación de Datos y Filtros Avanzados</td><td>Sábado 20 de Junio - 10:00 hs</td></tr>
-                <tr><td>Unidad 4: Diseño de Tableros y Compartición</td><td>Sábado 27 de Junio - 10:00 hs</td></tr>
-            </tbody>
-        </table>
+        <div class="dashboard-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Cronograma de clases</h2>
+                <!-- Botón exclusivo para docentes con el disparador de función corregido -->
+                <button id="btn-editar-cronograma" class="admin-only" onclick="alternarEdicionCronograma()" style="display: none; padding: 6px 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    📝 Editar cronograma
+                </button>
+            </div>
+            
+            <!-- Contenedor dinámico donde se inyectará la tabla o los inputs de edición -->
+            <div id="contenedor-cronograma">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Unidad</th>
+                            <th>Fecha de Clase en Vivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Unidad 1: Introducción y Conexión de Datos</td><td>Sábado 6 de Junio - 10:00 hs</td></tr>
+                        <tr><td>Unidad 2: Dimensiones, Métricas y Gráficos</td><td>Sábado 13 de Junio - 10:00 hs</td></tr>
+                        <tr><td>Unidad 3: Combinación de Datos y Filtros Avanzados</td><td>Sábado 20 de Junio - 10:00 hs</td></tr>
+                        <tr><td>Unidad 4: Diseño de Tableros y Compartición</td><td>Sábado 27 de Junio - 10:00 hs</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </section>
 
     <!-- ======================================================= -->
-    <!-- BLOQUES DE UNIDADES (Reemplazan la estructura anterior) -->
+    <!-- BLOQUES DE UNIDADES ACTUALIZADOS                        -->
     <!-- ======================================================= -->
 
     <!-- UNIDAD 1 -->
     <section class="unit-section" id="unidad1">
-<!-- EJEMPLO PARA LA UNIDAD 1 (Aplica el mismo patrón a las demás unidades) -->
-<div class="dashboard-section" id="modulo-unidad-1">
-  
-  <!-- 1. Botón de visibilidad (Exclusivo docente) encima del título -->
-  <div class="admin-only" style="display: none; margin-bottom: 15px;">
-    <button class="btn-toggle" id="btn-visibilidad-u1" onclick="cambiarVisibilidadUnidad('unidad1')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d;">
-      👁️ Visibilidad unidad 1
-    </button>
-  </div>
+        <div class="dashboard-section" id="modulo-unidad-1">
+            
+            <!-- 1. Botón de visibilidad encima del título -->
+            <div class="admin-only" style="display: none; margin-bottom: 15px;">
+                <button class="btn-toggle" id="btn-visibilidad-u1" onclick="cambiarVisibilidadUnidad('unidad1')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    👁️ Visibilidad unidad 1
+                </button>
+            </div>
 
-  <!-- 2. Título de la Unidad -->
-  <h2>Unidad 1: Introducción a la Visualización de Datos</h2>
-  
-  <!-- 3. CONTENEDOR DEL CONTENIDO: Todo lo que el alumno puede ver/descargar -->
-  <div id="contenido-unidad-1" class="contenido-unidad">
-    <p>Bienvenido a la unidad. Aquí tienes el material teórico y práctico...</p>
-    <a href="#" class="download-link">📂 Descargar Plantilla Lego Core</a>
-    <!-- ... Resto de tus enlaces de descarga y videos ... -->
-  </div>
-  
-  <!-- Mensaje de bloqueo alternativo que verá el alumno si la ocultas -->
-  <div id="bloqueo-unidad-1" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px;">
-    🔒 Esta unidad se encuentra oculta temporalmente por el docente.
-  </div>
-</div>
-        <p class="unit-description">Conceptos fundamentales de visualización de datos y conexión de fuentes.</p>
-        <div class="unit-resources">
-            <a href="#" class="download-link">📥 Descargar PDF Unidad 1</a>
-            <!-- Formulario de Entregas (Solo visible para Alumnos) -->
-<div id="vista-estudiante" class="dashboard-section">
-  <h2>Entregar Proyecto Final</h2>
-  <p>Copia y pega el enlace para compartir de tu reporte de Looker Studio.</p>
-  
-  <form id="form-entrega">
-    <div class="form-group">
-      <label for="url-proyecto">Enlace de Looker Studio:</label>
-      <input type="url" id="url-proyecto" placeholder="https://lookerstudio.google.com/..." required>
-    </div>
-    <div class="form-group">
-      <label for="comentarios-proyecto">Comentarios u observaciones (Opcional):</label>
-      <textarea id="comentarios-proyecto" rows="3" placeholder="Algo que quieras comentarle al docente sobre tus datos..."></textarea>
-    </div>
-    <button type="submit" id="btn-enviar-tarea">Enviar Proyecto</button>
-  </form>
-  
-  <div id="mensaje-exito" style="display: none; color: green; margin-top: 10px;">
-    ¡Proyecto entregado con éxito! El docente ya puede revisar tus visualizaciones.
-  </div>
-</div>
+            <!-- 2. Título de la Unidad -->
+            <h2>Unidad 1: Introducción a la Visualización de Datos</h2>
+            
+            <!-- 3. Contenedor de contenido protegido para alumnos -->
+            <div id="contenido-unidad-1" class="contenido-unidad">
+                <p class="unit-description">Conceptos fundamentales de visualización de datos y conexión de fuentes.</p>
+                <div class="unit-resources">
+                    <a href="#" class="download-link">📂 Descargar Plantilla Lego Core</a>
+                    <a href="#" class="download-link">📥 Descargar PDF Unidad 1</a>
+                    
+                    <!-- Formulario de Entregas (Solo para Alumnos) -->
+                    <div id="vista-estudiante" class="dashboard-section" style="margin-top: 20px;">
+                        <h2>Entregar Proyecto Final</h2>
+                        <p>Copia y pega el enlace para compartir de tu reporte de Looker Studio.</p>
+                        
+                        <form id="form-entrega">
+                            <div class="form-group">
+                                <label for="url-proyecto">Enlace de Looker Studio:</label>
+                                <input type="url" id="url-proyecto" placeholder="https://lookerstudio.google.com/..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="comentarios-proyecto">Comentarios u observaciones (Opcional):</label>
+                                <textarea id="comentarios-proyecto" rows="3" placeholder="Algo que quieras comentarle al docente sobre tus datos..."></textarea>
+                            </div>
+                            <button type="submit" id="btn-enviar-tarea">Enviar Proyecto</button>
+                        </form>
+                        
+                        <div id="mensaje-exito" style="display: none; color: green; margin-top: 10px;">
+                            ¡Proyecto entregado con éxito! El docente ya puede revisar tus visualizaciones.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alerta alternativa de bloqueo -->
+            <div id="bloqueo-unidad-1" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
+                🔒 Esta unidad se encuentra oculta temporalmente por el docente.
+            </div>
         </div>
-        <!-- Panel de corrección exclusivo del docente -->
-        <div class="admin-view center-correccion" style="display:none;">
+
+        <!-- Panel de corrección docente -->
+        <div class="admin-view center-correccion" style="display:none; margin-top: 20px;">
             <h3>📋 Panel de Entregas - TP 1</h3>
             <table>
                 <thead>
@@ -120,19 +124,34 @@
 
     <!-- UNIDAD 2 -->
     <section class="unit-section" id="unidad2">
-        <div class="unit-header">
-            <h2>Unidad 2: Dimensiones, Métricas y Gráficos</h2>
-            <div class="admin-only control-visibilidad" style="display:none;">
-                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad2')">
-                    Estado: <span id="estado-unidad2">Cargando...</span>
+        <div class="dashboard-section" id="modulo-unidad-2">
+            
+            <!-- 1. Botón de visibilidad encima del título -->
+            <div class="admin-only" style="display: none; margin-bottom: 15px;">
+                <button class="btn-toggle" id="btn-visibilidad-u2" onclick="cambiarVisibilidadUnidad('unidad2')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    👁️ Visibilidad unidad 2
                 </button>
             </div>
+
+            <!-- 2. Título de la Unidad -->
+            <h2>Unidad 2: Dimensiones, Métricas y Gráficos</h2>
+            
+            <!-- 3. Contenedor de contenido protegido para alumnos -->
+            <div id="contenido-unidad-2" class="contenido-unidad">
+                <p class="unit-description">Uso avanzado de campos calculados, métricas agregadas y formatos condicionales.</p>
+                <div class="unit-resources">
+                    <a href="#" class="download-link">📥 Descargar PDF Unidad 2</a>
+                </div>
+            </div>
+
+            <!-- Alerta alternativa de bloqueo -->
+            <div id="bloqueo-unidad-2" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
+                🔒 Esta unidad se encuentra oculta temporalmente por el docente.
+            </div>
         </div>
-        <p class="unit-description">Uso avanzado de campos calculados, métricas agregadas y formatos condicionales.</p>
-        <div class="unit-resources">
-            <a href="#" class="download-link">📥 Descargar PDF Unidad 2</a>
-        </div>
-        <div class="admin-view center-correccion" style="display:none;">
+
+        <!-- Panel de corrección docente -->
+        <div class="admin-view center-correccion" style="display:none; margin-top: 20px;">
             <h3>📋 Panel de Entregas - TP 2</h3>
             <table>
                 <thead>
@@ -145,19 +164,34 @@
 
     <!-- UNIDAD 3 -->
     <section class="unit-section" id="unidad3">
-        <div class="unit-header">
-            <h2>Unidad 3: Combinación de Datos y Filtros</h2>
-            <div class="admin-only control-visibilidad" style="display:none;">
-                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad3')">
-                    Estado: <span id="estado-unidad3">Cargando...</span>
+        <div class="dashboard-section" id="modulo-unidad-3">
+            
+            <!-- 1. Botón de visibilidad encima del título -->
+            <div class="admin-only" style="display: none; margin-bottom: 15px;">
+                <button class="btn-toggle" id="btn-visibilidad-u3" onclick="cambiarVisibilidadUnidad('unidad3')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    👁️ Visibilidad unidad 3
                 </button>
             </div>
+
+            <!-- 2. Título de la Unidad -->
+            <h2>Unidad 3: Combinación de Datos y Filtros</h2>
+            
+            <!-- 3. Contenedor de contenido protegido para alumnos -->
+            <div id="contenido-unidad-3" class="contenido-unidad">
+                <p class="unit-description">Estrategias de Blending (combinación de fuentes de datos) y controles de filtrado interactivos.</p>
+                <div class="unit-resources">
+                    <a href="#" class="download-link">📥 Descargar PDF Unidad 3</a>
+                </div>
+            </div>
+
+            <!-- Alerta alternativa de bloqueo -->
+            <div id="bloqueo-unidad-3" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
+                🔒 Esta unidad se encuentra oculta temporalmente por el docente.
+            </div>
         </div>
-        <p class="unit-description">Estrategias de Blending (combinación de fuentes de datos) y controles de filtrado interactivos.</p>
-        <div class="unit-resources">
-            <a href="#" class="download-link">📥 Descargar PDF Unidad 3</a>
-        </div>
-        <div class="admin-view center-correccion" style="display:none;">
+
+        <!-- Panel de corrección docente -->
+        <div class="admin-view center-correccion" style="display:none; margin-top: 20px;">
             <h3>📋 Panel de Entregas - TP 3</h3>
             <table>
                 <thead>
@@ -170,19 +204,34 @@
 
     <!-- UNIDAD 4 -->
     <section class="unit-section" id="unidad4">
-        <div class="unit-header">
-            <h2>Unidad 4: Diseño de Tableros y Reportes</h2>
-            <div class="admin-only control-visibilidad" style="display:none;">
-                <button class="btn-toggle" onclick="cambiarVisibilidad('unidad4')">
-                    Estado: <span id="estado-unidad4">Cargando...</span>
+        <div class="dashboard-section" id="modulo-unidad-4">
+            
+            <!-- 1. Botón de visibilidad encima del título -->
+            <div class="admin-only" style="display: none; margin-bottom: 15px;">
+                <button class="btn-toggle" id="btn-visibilidad-u4" onclick="cambiarVisibilidadUnidad('unidad4')" style="padding: 4px 10px; font-size: 12px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    👁️ Visibilidad unidad 4
                 </button>
             </div>
+
+            <!-- 2. Título de la Unidad -->
+            <h2>Unidad 4: Diseño de Tableros y Reportes</h2>
+            
+            <!-- 3. Contenedor de contenido protegido para alumnos -->
+            <div id="contenido-unidad-4" class="contenido-unidad">
+                <p class="unit-description">Buenas prácticas de UI/UX para dashboards e insights automatizados para clientes.</p>
+                <div class="unit-resources">
+                    <a href="#" class="download-link">📥 Descargar PDF Unidad 4</a>
+                </div>
+            </div>
+
+            <!-- Alerta alternativa de bloqueo -->
+            <div id="bloqueo-unidad-4" style="display: none; text-align: center; color: gray; padding: 20px; border: 1px dashed #ccc; border-radius: 4px; margin-top: 15px;">
+                🔒 Esta unidad se encuentra oculta temporalmente por el docente.
+            </div>
         </div>
-        <p class="unit-description">Buenas prácticas de UI/UX para dashboards e insights automatizados para clientes.</p>
-        <div class="unit-resources">
-            <a href="#" class="download-link">📥 Descargar PDF Unidad 4</a>
-        </div>
-        <div class="admin-view center-correccion" style="display:none;">
+
+        <!-- Panel de corrección docente -->
+        <div class="admin-view center-correccion" style="display:none; margin-top: 20px;">
             <h3>📋 Panel de Entregas - TP 4</h3>
             <table>
                 <thead>
