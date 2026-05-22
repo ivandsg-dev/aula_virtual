@@ -1,9 +1,13 @@
-// 1. Importaciones oficiales de Firebase 10.8.0
+// ==========================================
+// 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0
+// ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. Configuración de tu Firebase (Asegúrate de que coincida con tus credenciales)
+// ==========================================
+// 2. CONFIGURACIÓN DE FIREBASE
+// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY",
   authDomain: "aula-virtual-data-studio.firebaseapp.com",
@@ -19,8 +23,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Variables globales de control para el cronograma
+let editandoCronograma = false;
+let datosCronogramaLocal = [];
+
 // ==========================================
-// VISTAS Y ROLES: CONTROL DE FLUJO
+// 3. VISTAS Y ROLES: CONTROL DE FLUJO
 // ==========================================
 
 onAuthStateChanged(auth, async (user) => {
@@ -28,7 +36,7 @@ onAuthStateChanged(auth, async (user) => {
     console.log("Usuario autenticado:", user.email);
     
     try {
-      // Buscamos el rol del usuario en tu colección 'usuarios' de Firestore
+      // Buscamos el rol del usuario en la colección 'usuarios' de Firestore
       const userDocRef = doc(db, "usuarios", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -48,32 +56,18 @@ onAuthStateChanged(auth, async (user) => {
       }
     } catch (error) {
       console.error("Error al obtener el rol de Firestore:", error);
-      // En caso de falla de red o permisos, por seguridad mostramos la vista básica de alumno
+      // Por seguridad ante fallas, mostramos la vista básica de alumno
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
     console.log("No hay usuario activo. Redirigiendo al login...");
-    window.location.href = "index.html"; // Cambia por el nombre de tu archivo de login si es diferente
+    window.location.href = "index.html";
   }
 });
-//seccion de editar el cronograma
-let editandoCronograma = false;
-let datosCronogramaLocal = [];
 
-// Escuchar y cargar el cronograma desde Firestore en tiempo real
-function inicializarCronograma(esDocente) {
-  const contenedor = document.getElementById('contenedor-cronograma');
-  const btnEditar = document.getElementById('btn-editar-cronograma');
-  if (!contenedor) return;
-
-  if (esDocente && btnEditar) {
-    btnEditar.style.display = 'block';
-    // Asignamos el evento al botón de edición una sola vez
-    btnEditar.onclick = () => alternarEdicionCronograma();
-  }
-
-  function mostrarInterfazDocente() {
-  // 1. Mostrar elementos de administración corporativa
+// Activar la interfaz de Docente
+function mostrarInterfazDocente() {
+  // 1. Mostrar elementos de administración
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
   
   // Ocultar formulario de entregas
@@ -86,6 +80,7 @@ function inicializarCronograma(esDocente) {
   inicializarVisibilidadUnidades(true);
 }
 
+// Activar la interfaz de Estudiante
 function mostrarInterfazEstudiante(email, uid) {
   // 1. Ocultar herramientas exclusivas de profesor
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
@@ -99,13 +94,27 @@ function mostrarInterfazEstudiante(email, uid) {
   inicializarVisibilidadUnidades(false);
 }
 
-  // Escuchamos el documento fijo "curso/cronograma" en tu base de datos
+// ==========================================
+// 4. SECCIÓN: GESTIÓN DEL CRONOGRAMA
+// ==========================================
+
+function inicializarCronograma(esDocente) {
+  const contenedor = document.getElementById('contenedor-cronograma');
+  const btnEditar = document.getElementById('btn-editar-cronograma');
+  if (!contenedor) return;
+
+  if (esDocente && btnEditar) {
+    btnEditar.style.display = 'block';
+    btnEditar.onclick = () => alternarEdicionCronograma();
+  }
+
+  // Escuchamos el documento "configuracion/cronograma" en tiempo real
   onSnapshot(doc(db, "configuracion", "cronograma"), (docSnap) => {
     if (!editandoCronograma) {
       if (docSnap.exists()) {
         datosCronogramaLocal = docSnap.data().clases || [];
       } else {
-        // Datos por defecto si tu Firestore está vacío para empezar
+        // Datos por defecto si Firestore está vacío
         datosCronogramaLocal = [
           { clase: "Clase 1", fecha: "Semana 1", tema: "Fundamentos de Datos" },
           { clase: "Clase 2", fecha: "Semana 2", tema: "Primeros pasos en Looker Studio" }
@@ -116,7 +125,7 @@ function mostrarInterfazEstudiante(email, uid) {
   });
 }
 
-// Renderiza la tabla limpia para lectura (Alumnos y Vista de Profesor)
+// Renderiza la tabla limpia para lectura
 function renderizarCronogramaAmodoVista() {
   const contenedor = document.getElementById('contenedor-cronograma');
   let html = `
@@ -204,7 +213,6 @@ function alternarEdicionCronograma() {
 
 // Función auxiliar global para añadir filas dinámicamente en modo edición
 window.agregarFilaCronograma = function() {
-  // Guardamos lo que el usuario ya escribió antes de empujar la nueva fila
   datosCronogramaLocal.forEach((_, index) => {
     datosCronogramaLocal[index].clase = document.getElementById(`edit-clase-${index}`).value;
     datosCronogramaLocal[index].fecha = document.getElementById(`edit-fecha-${index}`).value;
@@ -212,23 +220,16 @@ window.agregarFilaCronograma = function() {
   });
   datosCronogramaLocal.push({ clase: "Nueva Clase", fecha: "Fecha", tema: "Descripción" });
   editandoCronograma = false; 
-  alternarEdicionCronograma(); // Refresca la vista de edición
+  alternarEdicionCronograma();
 };
-//fin esditar cronograma
-// Activar la interfaz de Docente
-function mostrarInterfazDocente() {
-  // Mostramos paneles de administración y tablas de corrección
-  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
-  // Ocultamos el formulario de entregas del estudiante
-  const vistaEstudiante = document.getElementById('vista-estudiante');
-  if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-// Escuchar en tiempo real el estado de las unidades desde Firestore
+// ==========================================
+// 5. SECCIÓN: VISIBILIDAD DE UNIDADES
+// ==========================================
+
 function inicializarVisibilidadUnidades(esDocente) {
   onSnapshot(doc(db, "configuracion", "unidades_visibilidad"), (docSnap) => {
-    const estados = docSnap.exists() ? docSnap.data() : { unidad1: true, unidad2: true }; // Valores por defecto abiertos
-
-    // Aplicar lógica a la Unidad 1 (puedes replicar este bloque para U2, U3, etc.)
+    const estados = docSnap.exists() ? docSnap.data() : { unidad1: true, unidad2: true };
     gestionarFiltroUnidad("unidad1", "1", estados.unidad1, esDocente);
   });
 }
@@ -236,12 +237,11 @@ function inicializarVisibilidadUnidades(esDocente) {
 function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
   const contenido = document.getElementById(`contenido-unidad-${numeroId}`);
   const bloqueo = document.getElementById(`bloqueo-unidad-${numeroId}`);
-  const botonVisibilidad = document.getElementById(`btn-visibilidad-u1`); // Reemplaza id dinámicamente si usas un bucle
+  const botonVisibilidad = document.getElementById(`btn-visibilidad-u1`);
 
   if (!contenido) return;
 
   if (esDocente) {
-    // El docente SIEMPRE ve el contenido, pero el botón le avisa cómo está para el alumno
     contenido.style.display = "block";
     if (bloqueo) bloqueo.style.display = "none";
     
@@ -255,7 +255,6 @@ function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
       }
     }
   } else {
-    // El ALUMNO sí sufre el bloqueo
     if (estaVisible) {
       contenido.style.display = "block";
       if (bloqueo) bloqueo.style.display = "none";
@@ -266,14 +265,12 @@ function gestionarFiltroUnidad(keyUnidad, numeroId, estaVisible, esDocente) {
   }
 }
 
-// Acción del botón para cambiar el estado en la base de datos
 window.cambiarVisibilidadUnidad = async function(keyUnidad) {
   const docRef = doc(db, "configuracion", "unidades_visibilidad");
   try {
     const docSnap = await getDoc(docRef);
     let estadosActuales = docSnap.exists() ? docSnap.data() : { unidad1: true };
     
-    // Invertimos el valor booleano actual
     const nuevoEstado = !estadosActuales[keyUnidad];
     
     await setDoc(docRef, {
@@ -287,34 +284,16 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
   }
 };
 
-  // Cargamos las entregas de los alumnos en tiempo real
-  cargarEntregasParaDocente();
-}
-
-// Activar la interfaz de Estudiante
-function mostrarInterfazEstudiante(email, uid) {
-  // Ocultamos las herramientas de administración del profesor
-  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
-  // Aseguramos que el formulario esté visible (ya lo modificamos en el HTML)
-  const vistaEstudiante = document.getElementById('vista-estudiante');
-  if (vistaEstudiante) vistaEstudiante.style.display = 'block';
-
-  // Inicializamos el formulario de envío para este alumno específico
-  inicializarFormularioEntrega(email, uid);
-}
-
 // ==========================================
-// LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
+// 6. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
 // ==========================================
 
 // Alumno: Envía la tarea
 function inicializarFormularioEntrega(userEmail, userId) {
   const formEntrega = document.getElementById('form-entrega');
-  const mensajeExito = document.getElementById('mensaje-exito');
-
   if (!formEntrega) return;
 
-  // Limpiamos listeners viejos clonando el nodo para evitar ejecuciones múltiples
+  // Evitamos ejecuciones múltiples clonando el nodo del formulario
   const nuevoForm = formEntrega.cloneNode(true);
   formEntrega.parentNode.replaceChild(nuevoForm, formEntrega);
 
@@ -396,7 +375,7 @@ window.corregirEntrega = async function(id) {
 };
 
 // ==========================================
-// BOTÓN DE CERRAR SESIÓN (Arreglado y Asegurado)
+// 7. BOTÓN DE CERRAR SESIÓN
 // ==========================================
 const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 if (btnCerrarSesion) {
