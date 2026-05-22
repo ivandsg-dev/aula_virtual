@@ -73,11 +73,13 @@ function mostrarInterfazDocente() {
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-  // NUEVO: Ocultar materiales de descarga y detalle de la unidad para el rol docente
-  // (Ajusta estos selectores de clase/ID según uses en tu HTML para esos bloques)
-  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad, .student-only').forEach(el => {
-    el.style.display = 'none';
-  });
+  // Usamos un pequeño retraso para asegurar que el DOM cargó los elementos antes de borrarlos
+  setTimeout(() => {
+    document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad, .student-only').forEach(el => {
+      el.style.display = 'none';
+    });
+    console.log("Materiales de estudiante ocultados para el docente.");
+  }, 100);
 
   cargarEntregasParaDocente();
   inicializarCronograma(true); 
