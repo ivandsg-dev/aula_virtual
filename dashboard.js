@@ -56,7 +56,138 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "index.html"; // Cambia por el nombre de tu archivo de login si es diferente
   }
 });
+//seccion de editar el cronograma
+let editandoCronograma = false;
+let datosCronogramaLocal = [];
 
+// Escuchar y cargar el cronograma desde Firestore en tiempo real
+function inicializarCronograma(esDocente) {
+  const contenedor = document.getElementById('contenedor-cronograma');
+  const btnEditar = document.getElementById('btn-editar-cronograma');
+  if (!contenedor) return;
+
+  if (esDocente && btnEditar) {
+    btnEditar.style.display = 'block';
+    // Asignamos el evento al botón de edición una sola vez
+    btnEditar.onclick = () => alternarEdicionCronograma();
+  }
+
+  // Escuchamos el documento fijo "curso/cronograma" en tu base de datos
+  onSnapshot(doc(db, "configuracion", "cronograma"), (docSnap) => {
+    if (!editandoCronograma) {
+      if (docSnap.exists()) {
+        datosCronogramaLocal = docSnap.data().clases || [];
+      } else {
+        // Datos por defecto si tu Firestore está vacío para empezar
+        datosCronogramaLocal = [
+          { clase: "Clase 1", fecha: "Semana 1", tema: "Fundamentos de Datos" },
+          { clase: "Clase 2", fecha: "Semana 2", tema: "Primeros pasos en Looker Studio" }
+        ];
+      }
+      renderizarCronogramaAmodoVista();
+    }
+  });
+}
+
+// Renderiza la tabla limpia para lectura (Alumnos y Vista de Profesor)
+function renderizarCronogramaAmodoVista() {
+  const contenedor = document.getElementById('contenedor-cronograma');
+  let html = `
+    <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+      <thead>
+        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; text-align: left;">
+          <th style="padding: 10px;">Sesión</th>
+          <th style="padding: 10px;">Fecha</th>
+          <th style="padding: 10px;">Eje Temático</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  datosCronogramaLocal.forEach(c => {
+    html += `
+      <tr style="border-bottom: 1px solid #dee2e6;">
+        <td style="padding: 10px; font-weight: bold;">${c.clase}</td>
+        <td style="padding: 10px; color: #555;">${c.fecha}</td>
+        <td style="padding: 10px;">${c.tema}</td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table>`;
+  contenedor.innerHTML = html;
+}
+
+// Transforma la tabla en inputs editables para el Profesor
+function alternarEdicionCronograma() {
+  const contenedor = document.getElementById('contenedor-cronograma');
+  const btnEditar = document.getElementById('btn-editar-cronograma');
+
+  if (!editandoCronograma) {
+    // Pasar a modo EDICIÓN
+    editandoCronograma = true;
+    btnEditar.innerText = "💾 Guardar Cambios";
+    btnEditar.style.backgroundColor = "#007bff";
+
+    let html = `
+      <p style="color: #007bff; font-size:13px; font-weight:bold;">Modo Edición Activo. Modifica los campos directamente:</p>
+      <table style="width:100%; border-collapse: collapse;">
+        <tbody>
+    `;
+
+    datosCronogramaLocal.forEach((c, index) => {
+      html += `
+        <tr style="border-bottom: 1px solid #dee2e6; background: #fdfdfd;">
+          <td style="padding: 6px;"><input type="text" id="edit-clase-${index}" value="${c.clase}" style="width:90%; padding:4px;"></td>
+          <td style="padding: 6px;"><input type="text" id="edit-fecha-${index}" value="${c.fecha}" style="width:90%; padding:4px;"></td>
+          <td style="padding: 6px;"><input type="text" id="edit-tema-${index}" value="${c.tema}" style="width:95%; padding:4px;"></td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>
+    <button onclick="agregarFilaCronograma()" style="margin-top:10px; padding: 5px 10px; font-size:12px; background:#6c757d; color:white; border:none; border-radius:3px; cursor:pointer;">➕ Añadir Fila</button>`;
+    contenedor.innerHTML = html;
+
+  } else {
+    // GUARDAR los cambios en Firestore
+    const nuevasClases = [];
+    datosCronogramaLocal.forEach((_, index) => {
+      const claseVal = document.getElementById(`edit-clase-${index}`).value;
+      const fechaVal = document.getElementById(`edit-fecha-${index}`).value;
+      const temaVal = document.getElementById(`edit-tema-${index}`).value;
+      if (claseVal || fechaVal || temaVal) {
+        nuevasClases.push({ clase: claseVal, fecha: fechaVal, tema: temaVal });
+      }
+    });
+
+    setDoc(doc(db, "configuracion", "cronograma"), { clases: nuevasClases })
+      .then(() => {
+        editandoCronograma = false;
+        btnEditar.innerText = "📝 Editar cronograma";
+        btnEditar.style.backgroundColor = "#28a745";
+        alert("¡Cronograma actualizado globalmente!");
+      })
+      .catch(err => {
+        console.error("Error al salvar cronograma:", err);
+        alert("No se pudieron guardar los cambios.");
+      });
+  }
+}
+
+// Función auxiliar global para añadir filas dinámicamente en modo edición
+window.agregarFilaCronograma = function() {
+  // Guardamos lo que el usuario ya escribió antes de empujar la nueva fila
+  datosCronogramaLocal.forEach((_, index) => {
+    datosCronogramaLocal[index].clase = document.getElementById(`edit-clase-${index}`).value;
+    datosCronogramaLocal[index].fecha = document.getElementById(`edit-fecha-${index}`).value;
+    datosCronogramaLocal[index].tema = document.getElementById(`edit-tema-${index}`).value;
+  });
+  datosCronogramaLocal.push({ clase: "Nueva Clase", fecha: "Fecha", tema: "Descripción" });
+  editandoCronograma = false; 
+  alternarEdicionCronograma(); // Refresca la vista de edición
+};
+//fin esditar cronograma
 // Activar la interfaz de Docente
 function mostrarInterfazDocente() {
   // Mostramos paneles de administración y tablas de corrección
