@@ -368,7 +368,7 @@ function cargarEntregasParaDocente() {
   onSnapshot(collection(db, "entregas"), (snapshot) => {
     tablaU1.innerHTML = "";
     if (snapshot.empty) {
-      tablaU1.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 15px;">No hay entregas registradas aún.</td></tr>`;
+      tablaU1.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 15px;">No hay entregas registradas aún.</td></tr>`;
       return;
     }
 
@@ -389,6 +389,26 @@ function cargarEntregasParaDocente() {
         }
       }
 
+      // --- LÓGICA DE FORMATEO DE FECHA ---
+      let fechaFormateada = "Sin fecha";
+      if (entrega.fecha) {
+        try {
+          const d = new Date(entrega.fecha);
+          // Formato local amigable: DD/MM/AAAA HH:MM
+          const dia = String(d.getDate()).padStart(2, '0');
+          const mes = String(d.getMonth() + 1).padStart(2, '0');
+          const anio = d.getFullYear();
+          const horas = String(d.getHours()).padStart(2, '0');
+          const minutos = String(d.getMinutes()).padStart(2, '0');
+          
+          fechaFormateada = `${dia}/${mes}/${anio} ${horas}:${minutos} hs`;
+        } catch (err) {
+          console.error("Error al formatear fecha:", err);
+          fechaFormateada = "Error en formato";
+        }
+      }
+      // ------------------------------------
+
       let badgeStyle = "background-color: #e0e0e0; color: #333;"; 
       if (entrega.estado === "Aprobado") {
         badgeStyle = "background-color: #d4edda; color: #155724; font-weight: bold; border: 1px solid #c3e6cb;";
@@ -399,10 +419,13 @@ function cargarEntregasParaDocente() {
       const fila = document.createElement('tr');
       fila.style.borderBottom = "1px solid #dee2e6";
       
-      fila.innerHTML = `
+fila.innerHTML = `
         <td style="padding: 10px;">
           <strong>${nombreIdentificado}</strong><br>
           <small style="color:gray; max-width: 250px; display:block; word-wrap:break-word;">${entrega.comentariosAlumno || 'Sin comentarios'}</small>
+        </td>
+        <td style="padding: 10px; color: #555; font-size: 13px;">
+          ${fechaFormateada}
         </td>
         <td style="padding: 10px;">
           <a href="${entrega.linkLookerStudio}" target="_blank" style="padding: 5px 10px; font-size: 12px; text-decoration: none; background: #e9ecef; border: 1px solid #ced4da; color: #495057; border-radius:4px;">🔗 Ver Reporte</a>
