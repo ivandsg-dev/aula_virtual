@@ -1,5 +1,5 @@
 // ==========================================
-// 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0 (UNIFICADAS)
+// 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
@@ -8,7 +8,7 @@ import {
   signOut, 
   updatePassword, 
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword // <-- AGREGADA: Necesaria para que el formulario funcione
+  signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
   getFirestore, 
@@ -39,25 +39,20 @@ const db = getFirestore(app);
 
 let editandoCronograma = false;
 let datosCronogramaLocal = [];
-
-// Variables globales para guardar datos del alumno y evitar colisiones de eventos
 let alumnoDatosEnvio = { nombre: "", uid: "" };
 
 // ==========================================
 // 3. LOGICA DE CONTROL DE PRIMER LOGIN
 // ==========================================
-
 async function registrarNuevoAlumno(email, password, nombreCompleto) {
   try {
     const credencial = await createUserWithEmailAndPassword(auth, email, password);
     const user = credencial.user;
-
     await setDoc(doc(db, "usuarios", user.uid), {
       nombre: nombreCompleto,
       rol: "estudiante",
       primerLogin: true 
     });
-
     alert("Alumno registrado con éxito.");
   } catch (error) {
     console.error("Error al registrar alumno:", error);
@@ -73,23 +68,22 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
 
   form.onsubmit = async (e) => {
     e.preventDefault();
-    txtError.style.display = "none";
+    if (txtError) txtError.style.display = "none";
 
     const nuevaClave = document.getElementById("nueva-clave").value;
     const confirmarClave = document.getElementById("confirmar-clave").value;
 
     if (nuevaClave !== confirmarClave) {
-      txtError.innerText = "❌ Las contraseñas no coinciden.";
-      txtError.style.display = "block";
+      if (txtError) {
+        txtError.innerText = "❌ Las contraseñas no coinciden.";
+        txtError.style.display = "block";
+      }
       return;
     }
 
     try {
       await updatePassword(userAuth, nuevaClave);
-
-      await updateDoc(userDocRef, {
-        primerLogin: false
-      }).catch(async () => {
+      await updateDoc(userDocRef, { primerLogin: false }).catch(async () => {
         await setDoc(userDocRef, { nombre: nombreMostrar, rol: "estudiante", primerLogin: false }, { merge: true });
       });
 
@@ -101,90 +95,62 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
 
     } catch (error) {
       console.error("Error al cambiar la contraseña:", error);
-      if (error.code === "auth/requires-recent-login") {
-        txtError.innerText = "❌ Por seguridad, cierra sesión e ingresa nuevamente antes de cambiar la clave.";
-      } else {
-        txtError.innerText = `❌ Error: ${error.message}`;
+      if (txtError) {
+        if (error.code === "auth/requires-recent-login") {
+          txtError.innerText = "❌ Por seguridad, cierra sesión e ingresa nuevamente antes de cambiar la clave.";
+        } else {
+          txtError.innerText = `❌ Error: ${error.message}`;
+        }
+        txtError.style.display = "block";
       }
-      txtError.style.display = "block";
     }
   };
 }
 
 // ==========================================
-// 4. VISTAS Y ROLES: CONTROL DE FLUJO (CON RASTREADORES)
+// 4. FUNCIONES DE INTERFAZ (DECLARADAS ANTES DE SER USADAS)
 // ==========================================
-onAuthStateChanged(auth, async (user) => {
-  const txtSaludo = document.getElementById('saludo-usuario');
-  const loginBox = document.querySelector('.login-box');
-  const welcomeContainer = document.querySelector('.welcome-container');
+function mostrarInterfazDocente() {
+  console.log("-> Ejecutando mostrarInterfazDocente de forma interna...");
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
   
-  if (user) {
-    console.log("🟢 RASTREO: Usuario autenticado detectado:", user.email);
-    
-    if (loginBox) loginBox.style.display = "none";
-    if (welcomeContainer) welcomeContainer.style.display = "none";
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-    try {
-      const userDocRef = doc(db, "usuarios", user.uid);
-      console.log("🟢 RASTREO: Buscando documento en Firestore para UID:", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const datosUsuario = userDocSnap.data();
-        const rol = datosUsuario.rol;
-        const nombreMostrar = datosUsuario.nombre || user.email; 
-        console.log("🟢 RASTREO: Usuario encontrado en BD. Rol:", rol, "| primerLogin:", datosUsuario.primerLogin);
-
-        if (rol === "docente") {
-          console.log("🟢 RASTREO: Entrando a interfaz de Docente...");
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
-          mostrarInterfazDocente();
-          console.log("🟢 RASTREO: Interfaz de Docente ejecutada por completo.");
-        } else {
-          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
-            console.log("🔒 RASTREO: El alumno tiene primerLogin activo. Mostrando modal...");
-            const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-            if (modalPrimerLogin) {
-              modalPrimerLogin.style.display = "flex";
-              configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
-            } else {
-              console.error("Error crítico: No se encontró 'pantalla-primer-login' en el HTML.");
-            }
-            return; 
-          }
-
-          console.log("🟢 RASTREO: Alumno validado. Entrando a interfaz de Estudiante...");
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
-          
-          // Agregamos alertas internas para ver cuál de estas falla silenciosamente:
-          console.log("   -> Ejecutando mostrarInterfazEstudiante...");
-          mostrarInterfazEstudiante(nombreMostrar, user.uid);
-          console.log("🟢 RASTREO: Interfaz de Estudiante ejecutada por completo.");
-        }
-      } else {
-        console.log("⚠️ RASTREO: El usuario está autenticado pero NO existe su documento en la colección 'usuarios' de Firestore.");
-        const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-        if (modalPrimerLogin) {
-          modalPrimerLogin.style.display = "flex";
-          configurarFormularioCambioClave(user, userDocRef, user.email);
-        } else {
-          console.log("⚠️ RASTREO: No se pudo mostrar el modal porque falta el HTML.");
-        }
-      }
-    } catch (error) {
-      console.error("❌ ERROR EN FLUJO PRINCIPAL:", error);
-      if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
-      mostrarInterfazEstudiante(user.email, user.uid);
+  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  const botonVisibilidad = document.getElementById('btn-visibilidad-u1');
+  const panelAdmin = document.querySelector('.admin-view');
+  if (botonVisibilidad) {
+    botonVisibilidad.style.display = 'inline-block';
+    if (panelAdmin && !panelAdmin.contains(botonVisibilidad)) {
+      panelAdmin.insertBefore(botonVisibilidad, panelAdmin.firstChild);
     }
-  } else {
-    console.log("⚪ RASTREO: No hay ningún usuario autenticado.");
-    if (loginBox) loginBox.style.display = "block";
-    if (welcomeContainer) welcomeContainer.style.display = "block";
-    const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-    if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
   }
-});
+
+  cargarEntregasParaDocente();
+  inicializarCronograma(true); 
+  inicializarVisibilidadUnidades(true);
+}
+
+function mostrarInterfazEstudiante(nombreCompleto, uid) {
+  console.log("-> Ejecutando mostrarInterfazEstudiante de forma interna...");
+  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
+  
+  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad').forEach(el => {
+    el.style.display = 'block';
+  });
+
+  const vistaEstudiante = document.getElementById('vista-estudiante');
+  if (vistaEstudiante) vistaEstudiante.style.display = 'block';
+
+  inicializarFormularioEntrega(nombreCompleto, uid);
+  escucharEstadoEntregaAlumno(uid); 
+  inicializarCronograma(false); 
+  inicializarVisibilidadUnidades(false);
+}
 
 // ==========================================
 // 5. SECCIÓN: GESTIÓN DEL CRONOGRAMA
@@ -237,7 +203,7 @@ function renderizarCronogramaAmodoVista() {
     `;
   });
   html += `</tbody></table>`;
-  contenedor.innerHTML = html;
+  if (contenedor) contenedor.innerHTML = html;
 }
 
 function alternarEdicionCronograma() {
@@ -261,7 +227,7 @@ function alternarEdicionCronograma() {
     });
     html += `</tbody></table>
     <button onclick="agregarFilaCronograma()" style="margin-top:10px; padding: 5px 10px; background:#6c757d; color:white; border:none; border-radius:3px; cursor:pointer;">➕ Añadir Fila</button>`;
-    contenedor.innerHTML = html;
+    if (contenedor) contenedor.innerHTML = html;
   } else {
     const nuevasClases = [];
     datosCronogramaLocal.forEach((_, index) => {
@@ -350,7 +316,6 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
 // ==========================================
 // 7. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
 // ==========================================
-
 async function ejecutarEnvioFormulario(e) {
   e.preventDefault();
   const urlProyecto = document.getElementById('url-proyecto').value;
@@ -450,7 +415,6 @@ function cargarEntregasParaDocente() {
     snapshot.forEach(async (docSnap) => {
       const entrega = docSnap.data();
       const idEntrega = docSnap.id;
-
       let nombreIdentificado = entrega.nombreAlumno || "Cargando...";
       
       if (!entrega.nombreAlumno && entrega.alumnoId) {
@@ -473,10 +437,8 @@ function cargarEntregasParaDocente() {
           const anio = d.getFullYear();
           const horas = String(d.getHours()).padStart(2, '0');
           const minutos = String(d.getMinutes()).padStart(2, '0');
-          
           fechaFormateada = `${dia}/${mes}/${anio} ${horas}:${minutos} hs`;
         } catch (err) {
-          console.error("Error al formatear fecha:", err);
           fechaFormateada = "Error en formato";
         }
       }
@@ -516,7 +478,6 @@ function cargarEntregasParaDocente() {
 
 window.corregirEntrega = async function(id) {
   const seleccion = prompt("Selecciona el dictamen del proyecto:\nEscribe 'Aprobado' para aprobar.\nEscribe 'revisar' si requiere correcciones.");
-  
   if (seleccion === null) return; 
   
   const estadoFinal = seleccion.trim();
@@ -529,40 +490,29 @@ window.corregirEntrega = async function(id) {
   if (feedback === null) return;
 
   try {
-    const entregaRef = doc(db, "entregas", id);
-    await updateDoc(entregaRef, { 
+    await updateDoc(doc(db, "entregas", id), { 
       estado: estadoFinal,
       feedbackDocente: feedback.trim()
     });
     alert("¡Evaluación y feedback guardados con éxito!");
   } catch (error) {
     console.error("Error al calificar:", error);
-    alert("No se pudo actualizar la nota.");
   }
 };
 
-const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-if (btnCerrarSesion) {
-  btnCerrarSesion.addEventListener('click', () => {
-    signOut(auth).then(() => { window.location.href = "index.html"; });
-  });
-}
-
 // ==========================================
-// 8. ESCUCHA DE FORMULARIO DE LOGIN (AGREGADO PARA VOLVER A DAR VIDA AL BOTÓN)
+// 8. ESCUCHA DE FORMULARIO DE LOGIN
 // ==========================================
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    
     const email = document.getElementById("loginEmail").value;
     const contrasena = document.getElementById("loginPassword").value;
     const txtError = document.getElementById("errorMessage");
 
     try {
       if (txtError) txtError.style.display = "none";
-      // Autentica contra Firebase. onAuthStateChanged se encargará automáticamente del resto del flujo
       await signInWithEmailAndPassword(auth, email, contrasena);
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
@@ -573,3 +523,69 @@ if (loginForm) {
     }
   });
 }
+
+const btnCerrarSesion = document.getElementById('btnCerrarSesion');
+if (btnCerrarSesion) {
+  btnCerrarSesion.addEventListener('click', () => {
+    signOut(auth).then(() => { window.location.href = "index.html"; });
+  });
+}
+
+// ==========================================
+// 9. VISTAS Y ROLES: CONTROL DE FLUJO (AL FINAL)
+// ==========================================
+onAuthStateChanged(auth, async (user) => {
+  const txtSaludo = document.getElementById('saludo-usuario');
+  const loginBox = document.querySelector('.login-box');
+  const welcomeContainer = document.querySelector('.welcome-container');
+  
+  if (user) {
+    console.log("🟢 RASTREO: Usuario autenticado detectado:", user.email);
+    
+    if (loginBox) loginBox.style.display = "none";
+    if (welcomeContainer) welcomeContainer.style.display = "none";
+
+    try {
+      const userDocRef = doc(db, "usuarios", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const datosUsuario = userDocSnap.data();
+        const rol = datosUsuario.rol;
+        const nombreMostrar = datosUsuario.nombre || user.email; 
+
+        if (rol === "docente") {
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
+          mostrarInterfazDocente();
+        } else {
+          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+            const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+            if (modalPrimerLogin) {
+              modalPrimerLogin.style.display = "flex";
+              configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
+            }
+            return; 
+          }
+
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+          mostrarInterfazEstudiante(nombreMostrar, user.uid);
+        }
+      } else {
+        const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+        if (modalPrimerLogin) {
+          modalPrimerLogin.style.display = "flex";
+          configurarFormularioCambioClave(user, userDocRef, user.email);
+        }
+      }
+    } catch (error) {
+      console.error("❌ ERROR EN FLUJO PRINCIPAL:", error);
+      if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
+      mostrarInterfazEstudiante(user.email, user.uid);
+    }
+  } else {
+    if (loginBox) loginBox.style.display = "block";
+    if (welcomeContainer) welcomeContainer.style.display = "block";
+    const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+    if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
+  }
+});
