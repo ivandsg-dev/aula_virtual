@@ -43,7 +43,7 @@ async function verificarPrimerLogin(userAuth) {
       const datosUsuario = userDocSnap.data();
 
       // Si el flag 'primerLogin' es true (o no existe aún en su registro), bloqueamos la pantalla
-      if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+      if (datosUsuario.primerLogin === verdadero || datosUsuario.primerLogin === undefined) {
         
         // Ocultamos el dashboard principal por si acaso y mostramos el bloqueo
         document.getElementById("pantalla-primer-login").style.display = "flex";
