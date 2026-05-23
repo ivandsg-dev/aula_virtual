@@ -1,16 +1,29 @@
 // ==========================================
-// 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0
+// 1. IMPORTACIONES OFICIALES DE FIREBASE 10.8.0 (UNIFICADAS)
 // ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signOut, 
+  updatePassword, 
+  createUserWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  collection, 
+  onSnapshot, 
+  updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // ==========================================
 // 2. CONFIGURACIÓN DE FIREBASE
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY",
+  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY", // Recuerda restringir esta API Key en Google Cloud Console
   authDomain: "aula-virtual-data-studio.firebaseapp.com",
   projectId: "aula-virtual-data-studio",
   storageBucket: "aula-virtual-data-studio.firebasestorage.app",
@@ -33,10 +46,6 @@ let alumnoDatosEnvio = { nombre: "", uid: "" };
 // 3. LOGICA DE CONTROL DE PRIMER LOGIN
 // ==========================================
 
-// 1. FUNCIÓN DE CONTROL AL MOMENTO DEL LOGIN
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
 async function registrarNuevoAlumno(email, password, nombreCompleto) {
   try {
     // 1. Se crea el usuario en Firebase Authentication
@@ -56,11 +65,12 @@ async function registrarNuevoAlumno(email, password, nombreCompleto) {
   }
 }
 
-// 2. CONFIGURACIÓN DEL FORMULARIO DE CAMBIO DE CLAVE
 function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
   const form = document.getElementById("form-cambio-obligatorio");
   const txtError = document.getElementById("error-cambio-clave");
   const txtSaludo = document.getElementById('saludo-usuario');
+
+  if (!form) return;
 
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -79,7 +89,7 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
       // A. Actualizamos la contraseña en Firebase Authentication
       await updatePassword(userAuth, nuevaClave);
 
-      // B. Actualizamos el flag en Firestore (con merge:true por si el documento es nuevo)
+      // B. Actualizamos el flag en Firestore
       await updateDoc(userDocRef, {
         primerLogin: false
       }).catch(async () => {
@@ -91,7 +101,7 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
       document.getElementById("pantalla-primer-login").style.display = "none";
       alert("¡Contraseña actualizada con éxito! Bienvenido al curso.");
       
-      // D. ¡DESTRABAMOS LA CARGA! Ejecutamos tus funciones originales del Alumno
+      // D. Ejecutamos funciones originales del Alumno
       if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
       mostrarInterfazEstudiante(nombreMostrar, userAuth.uid);
 
@@ -108,7 +118,7 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
 }
 
 // ==========================================
-// 3. VISTAS Y ROLES: CONTROL DE FLUJO
+// 4. VISTAS Y ROLES: CONTROL DE FLUJO
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
   const txtSaludo = document.getElementById('saludo-usuario');
@@ -124,31 +134,22 @@ onAuthStateChanged(auth, async (user) => {
         const rol = datosUsuario.rol;
         const nombreMostrar = datosUsuario.nombre || user.email; 
 
-// Dentro de tu onAuthStateChanged, en el bloque del alumno:
-if (rol === "docente") {
-  if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
-  mostrarInterfazDocente();
-} else {
-  
-  // REVISÁ QUE ESTA CONDICIÓN ESTÉ EXACTAMENTE ASÍ:
-  if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined || !userDocSnap.exists()) {
-    
-    // 1. Forzamos la apertura de la pantalla de cambio de clave
-    document.getElementById("pantalla-primer-login").style.display = "flex";
-    
-    // 2. Inicializamos el formulario
-    configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
-    
-    // 3. Freno absoluto para que no vea el curso sin cambiar la clave
-    return; 
-  }
+        if (rol === "docente") {
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
+          mostrarInterfazDocente();
+        } else {
+          // Verificación estricta de primer login
+          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+            document.getElementById("pantalla-primer-login").style.display = "flex";
+            configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
+            return; 
+          }
 
-  // Si no cumple lo anterior, es un alumno antiguo, entra directo
-  if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
-  mostrarInterfazEstudiante(nombreMostrar, user.uid);
-}
+          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+          mostrarInterfazEstudiante(nombreMostrar, user.uid);
+        }
       } else {
-        // Si el usuario no existe en Firestore, por defecto es alumno sin primerLogin definido
+        // Si no existe el documento, asumimos que requiere configuración inicial
         document.getElementById("pantalla-primer-login").style.display = "flex";
         configurarFormularioCambioClave(user, userDocRef, user.email);
       }
@@ -158,27 +159,20 @@ if (rol === "docente") {
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
-    // Si no hay usuario y ya estás en index.html, no redirigimos para evitar bucles infinitos.
-    // Solo redirigir si tu lógica de login (por ejemplo un contenedor oculto) lo requiere.
     console.log("No hay usuario autenticado.");
   }
 });
 
 function mostrarInterfazDocente() {
-  // Mostrar paneles de administración
   document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
   
-  // Ocultar la sección entera de entregas del estudiante
   const vistaEstudiante = document.getElementById('vista-estudiante');
   if (vistaEstudiante) vistaEstudiante.style.display = 'none';
 
-  // Ocultar los recursos del alumno
   document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
     el.style.display = 'none';
   });
   
-  // CORRECCIÓN BOTÓN DOCENTE: Si el botón estaba metido adentro de una sección oculta,
-  // lo extraemos y lo movemos temporalmente al panel de administración para que nunca quede inaccesible.
   const botonVisibilidad = document.getElementById('btn-visibilidad-u1');
   const panelAdmin = document.querySelector('.admin-view');
   if (botonVisibilidad) {
@@ -210,7 +204,7 @@ function mostrarInterfazEstudiante(nombreCompleto, uid) {
 }
 
 // ==========================================
-// 4. SECCIÓN: GESTIÓN DEL CRONOGRAMA
+// 5. SECCIÓN: GESTIÓN DEL CRONOGRAMA
 // ==========================================
 function inicializarCronograma(esDocente) {
   const contenedor = document.getElementById('contenedor-cronograma');
@@ -309,17 +303,23 @@ function alternarEdicionCronograma() {
 
 window.agregarFilaCronograma = function() {
   datosCronogramaLocal.forEach((_, index) => {
-    datosCronogramaLocal[index].clase = document.getElementById(`edit-clase-${index}`).value;
-    datosCronogramaLocal[index].fecha = document.getElementById(`edit-fecha-${index}`).value;
-    datosCronogramaLocal[index].tema = document.getElementById(`edit-tema-${index}`).value;
+    const claseInput = document.getElementById(`edit-clase-${index}`);
+    const fechaInput = document.getElementById(`edit-fecha-${index}`);
+    const temaInput = document.getElementById(`edit-tema-${index}`);
+    
+    if (claseInput) datosCronogramaLocal[index].clase = claseInput.value;
+    if (fechaInput) datosCronogramaLocal[index].fecha = fechaInput.value;
+    if (temaInput) datosCronogramaLocal[index].tema = temaInput.value;
   });
+  
   datosCronogramaLocal.push({ clase: "Nueva Clase", fecha: "Fecha", tema: "Descripción" });
+  // Mantenemos editandoCronograma en true para que alternarEdicion se procese como "guardado de fila temporal"
   editandoCronograma = false; 
   alternarEdicionCronograma();
 };
 
 // ==========================================
-// 5. SECCIÓN: VISIBILIDAD DE UNIDADES
+// 6. SECCIÓN: VISIBILIDAD DE UNIDADES
 // ==========================================
 function inicializarVisibilidadUnidades(esDocente) {
   onSnapshot(doc(db, "configuracion", "unidades_visibilidad"), (docSnap) => {
@@ -366,10 +366,9 @@ window.cambiarVisibilidadUnidad = async function(keyUnidad) {
 };
 
 // ==========================================
-// 6. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
+// 7. LÓGICA DE PROCESOS: ENVIAR Y LEER ENTREGAS
 // ==========================================
 
-// Manejador del submit unificado para evitar clonar nodos
 async function ejecutarEnvioFormulario(e) {
   e.preventDefault();
   const urlProyecto = document.getElementById('url-proyecto').value;
@@ -395,8 +394,6 @@ function inicializarFormularioEntrega(nombreEstudiante, userId) {
   const formEntrega = document.getElementById('form-entrega');
   if (!formEntrega) return;
 
-  // CORRECCIÓN TOTAL: Guardamos los datos en variables globales y usamos removeEventListener.
-  // Ya NO clonamos el elemento, por lo que los IDs internos permanecen intactos y únicos en el DOM.
   alumnoDatosEnvio.nombre = nombreEstudiante;
   alumnoDatosEnvio.uid = userId;
 
@@ -414,7 +411,6 @@ function escucharEstadoEntregaAlumno(userId) {
   const txtRevisar = document.getElementById('feedback-revisar');
 
   onSnapshot(doc(db, "entregas", userId), (docSnap) => {
-    // Restablecer estados visuales base
     if (form) form.style.display = 'block';
     if (leyendaUrl) leyendaUrl.style.display = 'block'; 
     if (divPendiente) divPendiente.style.display = 'none';
@@ -426,7 +422,6 @@ function escucharEstadoEntregaAlumno(userId) {
       const estado = entrega.estado;
       const feedback = entrega.feedbackDocente || "Sin observaciones adicionales.";
 
-      // CORRECCIÓN LEYENDA: Al no haber clones, ocultar "leyendaUrl" afectará directamente al elemento real visible.
       if (estado === "Pendiente") {
         if (form) form.style.display = 'none';
         if (leyendaUrl) leyendaUrl.style.display = 'none'; 
@@ -487,12 +482,10 @@ function cargarEntregasParaDocente() {
         }
       }
 
-      // --- LÓGICA DE FORMATEO DE FECHA ---
       let fechaFormateada = "Sin fecha";
       if (entrega.fecha) {
         try {
           const d = new Date(entrega.fecha);
-          // Formato local amigable: DD/MM/AAAA HH:MM
           const dia = String(d.getDate()).padStart(2, '0');
           const mes = String(d.getMonth() + 1).padStart(2, '0');
           const anio = d.getFullYear();
@@ -505,7 +498,6 @@ function cargarEntregasParaDocente() {
           fechaFormateada = "Error en formato";
         }
       }
-      // ------------------------------------
 
       let badgeStyle = "background-color: #e0e0e0; color: #333;"; 
       if (entrega.estado === "Aprobado") {
@@ -517,7 +509,7 @@ function cargarEntregasParaDocente() {
       const fila = document.createElement('tr');
       fila.style.borderBottom = "1px solid #dee2e6";
       
-fila.innerHTML = `
+      fila.innerHTML = `
         <td style="padding: 10px;">
           <strong>${nombreIdentificado}</strong><br>
           <small style="color:gray; max-width: 250px; display:block; word-wrap:break-word;">${entrega.comentariosAlumno || 'Sin comentarios'}</small>
