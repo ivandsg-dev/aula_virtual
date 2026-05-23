@@ -4,6 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // ==========================================
 // 2. CONFIGURACIÓN DE FIREBASE
@@ -33,30 +34,25 @@ let alumnoDatosEnvio = { nombre: "", uid: "" };
 // ==========================================
 
 // 1. FUNCIÓN DE CONTROL AL MOMENTO DEL LOGIN
-async function verificarPrimerLogin(userAuth) {
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+async function registrarNuevoAlumno(email, password, nombreCompleto) {
   try {
-    // Buscamos el documento del usuario en Firestore para ver su estado
-    const userDocRef = doc(db, "usuarios", userAuth.uid);
-    const userDocSnap = await getDoc(userDocRef);
+    // 1. Se crea el usuario en Firebase Authentication
+    const credencial = await createUserWithEmailAndPassword(auth, email, password);
+    const user = credencial.user;
 
-    if (userDocSnap.exists()) {
-      const datosUsuario = userDocSnap.data();
+    // 2. Se crea el perfil en Firestore vinculando el UID
+    await setDoc(doc(db, "usuarios", user.uid), {
+      nombre: nombreCompleto,
+      rol: "estudiante",
+      primerLogin: true // <-- ESTO ES LO QUE ACTIVA EL BLOQUEO AL ENTRAR
+    });
 
-      // Si el flag 'primerLogin' es true (o no existe aún en su registro), bloqueamos la pantalla
-      if (datosUsuario.primerLogin === verdadero || datosUsuario.primerLogin === undefined) {
-        
-        // Ocultamos el dashboard principal por si acaso y mostramos el bloqueo
-        document.getElementById("pantalla-primer-login").style.display = "flex";
-        
-        // Inicializamos el escuchador del formulario de cambio de clave
-        configurarFormularioCambioClave(userAuth, userDocRef);
-        return true; // Es primer login
-      }
-    }
-    return false; // Ya pasó por esto antes
+    alert("Alumno registrado con éxito.");
   } catch (error) {
-    console.error("Error verificando perfil del usuario:", error);
-    return false;
+    console.error("Error al registrar alumno:", error);
   }
 }
 
@@ -128,29 +124,29 @@ onAuthStateChanged(auth, async (user) => {
         const rol = datosUsuario.rol;
         const nombreMostrar = datosUsuario.nombre || user.email; 
 
-        if (rol === "docente") {
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
-          mostrarInterfazDocente();
-        } else {
-          // =========================================================
-          // FILTRO DE SEGURIDAD: CONTROL DE PRIMER LOGIN (ALUMNOS)
-          // =========================================================
-          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
-            // 1. Mostramos la pantalla de bloqueo
-            document.getElementById("pantalla-primer-login").style.display = "flex";
-            
-            // 2. Preparamos el formulario y le pasamos los datos para que sepa qué hacer al terminar con éxito
-            configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
-            
-            // 3. Freno de mano: no llamamos a mostrarInterfazEstudiante todavía
-            return; 
-          }
-          // =========================================================
+// Dentro de tu onAuthStateChanged, en el bloque del alumno:
+if (rol === "docente") {
+  if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
+  mostrarInterfazDocente();
+} else {
+  
+  // REVISÁ QUE ESTA CONDICIÓN ESTÉ EXACTAMENTE ASÍ:
+  if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined || !userDocSnap.exists()) {
+    
+    // 1. Forzamos la apertura de la pantalla de cambio de clave
+    document.getElementById("pantalla-primer-login").style.display = "flex";
+    
+    // 2. Inicializamos el formulario
+    configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
+    
+    // 3. Freno absoluto para que no vea el curso sin cambiar la clave
+    return; 
+  }
 
-          // Si ya cambió la clave antes, entra directo de forma normal
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
-          mostrarInterfazEstudiante(nombreMostrar, user.uid);
-        }
+  // Si no cumple lo anterior, es un alumno antiguo, entra directo
+  if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+  mostrarInterfazEstudiante(nombreMostrar, user.uid);
+}
       } else {
         // Si el usuario no existe en Firestore, por defecto es alumno sin primerLogin definido
         document.getElementById("pantalla-primer-login").style.display = "flex";
