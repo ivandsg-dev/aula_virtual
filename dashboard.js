@@ -112,7 +112,7 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
 }
 
 // ==========================================
-// 4. VISTAS Y ROLES: CONTROL DE FLUJO
+// 4. VISTAS Y ROLES: CONTROL DE FLUJO (CON RASTREADORES)
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
   const txtSaludo = document.getElementById('saludo-usuario');
@@ -120,102 +120,71 @@ onAuthStateChanged(auth, async (user) => {
   const welcomeContainer = document.querySelector('.welcome-container');
   
   if (user) {
-    console.log("Usuario autenticado:", user.email);
+    console.log("🟢 RASTREO: Usuario autenticado detectado:", user.email);
     
-    // Ocultamos el bloque de login general de la pantalla si el usuario está adentro
     if (loginBox) loginBox.style.display = "none";
     if (welcomeContainer) welcomeContainer.style.display = "none";
 
     try {
       const userDocRef = doc(db, "usuarios", user.uid);
+      console.log("🟢 RASTREO: Buscando documento en Firestore para UID:", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
         const datosUsuario = userDocSnap.data();
         const rol = datosUsuario.rol;
         const nombreMostrar = datosUsuario.nombre || user.email; 
+        console.log("🟢 RASTREO: Usuario encontrado en BD. Rol:", rol, "| primerLogin:", datosUsuario.primerLogin);
 
         if (rol === "docente") {
+          console.log("🟢 RASTREO: Entrando a interfaz de Docente...");
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
+          console.log("🟢 RASTREO: Interfaz de Docente ejecutada por completo.");
         } else {
-          // 🔒 VERIFICACIÓN ESTRICTA: Si es primer login, frena acá y muestra el bloqueo
           if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
+            console.log("🔒 RASTREO: El alumno tiene primerLogin activo. Mostrando modal...");
             const modalPrimerLogin = document.getElementById("pantalla-primer-login");
             if (modalPrimerLogin) {
               modalPrimerLogin.style.display = "flex";
               configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
             } else {
-              console.error("Error crítico: No se encontró el contenedor 'pantalla-primer-login' en el HTML.");
+              console.error("Error crítico: No se encontró 'pantalla-primer-login' en el HTML.");
             }
-            return; // FRENO ABSOLUTO.
+            return; 
           }
 
+          console.log("🟢 RASTREO: Alumno validado. Entrando a interfaz de Estudiante...");
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
+          
+          // Agregamos alertas internas para ver cuál de estas falla silenciosamente:
+          console.log("   -> Ejecutando mostrarInterfazEstudiante...");
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
+          console.log("🟢 RASTREO: Interfaz de Estudiante ejecutada por completo.");
         }
       } else {
+        console.log("⚠️ RASTREO: El usuario está autenticado pero NO existe su documento en la colección 'usuarios' de Firestore.");
         const modalPrimerLogin = document.getElementById("pantalla-primer-login");
         if (modalPrimerLogin) {
           modalPrimerLogin.style.display = "flex";
           configurarFormularioCambioClave(user, userDocRef, user.email);
+        } else {
+          console.log("⚠️ RASTREO: No se pudo mostrar el modal porque falta el HTML.");
         }
       }
     } catch (error) {
-      console.error("Error al obtener el rol o nombre:", error);
+      console.error("❌ ERROR EN FLUJO PRINCIPAL:", error);
       if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
-    console.log("No hay usuario autenticado.");
-    // Mostramos la caja de login si no hay nadie online
+    console.log("⚪ RASTREO: No hay ningún usuario autenticado.");
     if (loginBox) loginBox.style.display = "block";
     if (welcomeContainer) welcomeContainer.style.display = "block";
-    
     const modalPrimerLogin = document.getElementById("pantalla-primer-login");
     if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
   }
 });
-
-function mostrarInterfazDocente() {
-  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'block');
-  
-  const vistaEstudiante = document.getElementById('vista-estudiante');
-  if (vistaEstudiante) vistaEstudiante.style.display = 'none';
-
-  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, .student-only').forEach(el => {
-    el.style.display = 'none';
-  });
-  
-  const botonVisibilidad = document.getElementById('btn-visibilidad-u1');
-  const panelAdmin = document.querySelector('.admin-view');
-  if (botonVisibilidad) {
-    botonVisibilidad.style.display = 'inline-block';
-    if (panelAdmin && !panelAdmin.contains(botonVisibilidad)) {
-      panelAdmin.insertBefore(botonVisibilidad, panelAdmin.firstChild);
-    }
-  }
-
-  cargarEntregasParaDocente();
-  inicializarCronograma(true); 
-  inicializarVisibilidadUnidades(true);
-}
-
-function mostrarInterfazEstudiante(nombreCompleto, uid) {
-  document.querySelectorAll('.admin-view, .admin-only').forEach(el => el.style.display = 'none');
-  
-  document.querySelectorAll('.materiales-descarga, .contenido-detalle-unidad, #detalle-unidad').forEach(el => {
-    el.style.display = 'block';
-  });
-
-  const vistaEstudiante = document.getElementById('vista-estudiante');
-  if (vistaEstudiante) vistaEstudiante.style.display = 'block';
-
-  inicializarFormularioEntrega(nombreCompleto, uid);
-  escucharEstadoEntregaAlumno(uid); 
-  inicializarCronograma(false); 
-  inicializarVisibilidadUnidades(false);
-}
 
 // ==========================================
 // 5. SECCIÓN: GESTIÓN DEL CRONOGRAMA
