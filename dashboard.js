@@ -7,7 +7,8 @@ import {
   onAuthStateChanged, 
   signOut, 
   updatePassword, 
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword // <-- AGREGADA: Necesaria para que el formulario funcione
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { 
   getFirestore, 
@@ -23,7 +24,7 @@ import {
 // 2. CONFIGURACIÓN DE FIREBASE
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY", // Recuerda restringir esta API Key en Google Cloud Console
+  apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY", 
   authDomain: "aula-virtual-data-studio.firebaseapp.com",
   projectId: "aula-virtual-data-studio",
   storageBucket: "aula-virtual-data-studio.firebasestorage.app",
@@ -48,15 +49,13 @@ let alumnoDatosEnvio = { nombre: "", uid: "" };
 
 async function registrarNuevoAlumno(email, password, nombreCompleto) {
   try {
-    // 1. Se crea el usuario en Firebase Authentication
     const credencial = await createUserWithEmailAndPassword(auth, email, password);
     const user = credencial.user;
 
-    // 2. Se crea el perfil en Firestore vinculando el UID
     await setDoc(doc(db, "usuarios", user.uid), {
       nombre: nombreCompleto,
       rol: "estudiante",
-      primerLogin: true // <-- ESTO ES LO QUE ACTIVA EL BLOQUEO AL ENTRAR
+      primerLogin: true 
     });
 
     alert("Alumno registrado con éxito.");
@@ -86,22 +85,17 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
     }
 
     try {
-      // A. Actualizamos la contraseña en Firebase Authentication
       await updatePassword(userAuth, nuevaClave);
 
-      // B. Actualizamos el flag en Firestore
       await updateDoc(userDocRef, {
         primerLogin: false
       }).catch(async () => {
-        // Salvavidas: Si el documento no existía en Firestore, lo creamos
         await setDoc(userDocRef, { nombre: nombreMostrar, rol: "estudiante", primerLogin: false }, { merge: true });
       });
 
-      // C. Liberamos la pantalla de bloqueo
       document.getElementById("pantalla-primer-login").style.display = "none";
       alert("¡Contraseña actualizada con éxito! Bienvenido al curso.");
       
-      // D. Ejecutamos funciones originales del Alumno
       if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
       mostrarInterfazEstudiante(nombreMostrar, userAuth.uid);
 
@@ -122,9 +116,16 @@ function configurarFormularioCambioClave(userAuth, userDocRef, nombreMostrar) {
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
   const txtSaludo = document.getElementById('saludo-usuario');
+  const loginBox = document.querySelector('.login-box');
+  const welcomeContainer = document.querySelector('.welcome-container');
   
   if (user) {
     console.log("Usuario autenticado:", user.email);
+    
+    // Ocultamos el bloque de login general de la pantalla si el usuario está adentro
+    if (loginBox) loginBox.style.display = "none";
+    if (welcomeContainer) welcomeContainer.style.display = "none";
+
     try {
       const userDocRef = doc(db, "usuarios", user.uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -138,7 +139,7 @@ onAuthStateChanged(auth, async (user) => {
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
         } else {
-          // 🔒 VERIFICACIÓN ESTRICTA: Si es primer login, frena acá y no dejes pasar al alumno
+          // 🔒 VERIFICACIÓN ESTRICTA: Si es primer login, frena acá y muestra el bloqueo
           if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
             const modalPrimerLogin = document.getElementById("pantalla-primer-login");
             if (modalPrimerLogin) {
@@ -147,15 +148,13 @@ onAuthStateChanged(auth, async (user) => {
             } else {
               console.error("Error crítico: No se encontró el contenedor 'pantalla-primer-login' en el HTML.");
             }
-            return; // FRENO ABSOLUTO. Evita que se dibuje la interfaz del curso abajo.
+            return; // FRENO ABSOLUTO.
           }
 
-          // Si no es su primer login, entra de forma normal
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
-        // Si no existe el documento en la base de datos, bloqueo por seguridad
         const modalPrimerLogin = document.getElementById("pantalla-primer-login");
         if (modalPrimerLogin) {
           modalPrimerLogin.style.display = "flex";
@@ -165,12 +164,14 @@ onAuthStateChanged(auth, async (user) => {
     } catch (error) {
       console.error("Error al obtener el rol o nombre:", error);
       if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
-      // Ante un error de red o de Firebase, por seguridad no lo dejes pasar directo si sospechás que es primer login
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
     console.log("No hay usuario autenticado.");
-    // Si se desautentica, podés asegurarte de ocultar el modal por si quedó abierto
+    // Mostramos la caja de login si no hay nadie online
+    if (loginBox) loginBox.style.display = "block";
+    if (welcomeContainer) welcomeContainer.style.display = "block";
+    
     const modalPrimerLogin = document.getElementById("pantalla-primer-login");
     if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
   }
@@ -326,7 +327,6 @@ window.agregarFilaCronograma = function() {
   });
   
   datosCronogramaLocal.push({ clase: "Nueva Clase", fecha: "Fecha", tema: "Descripción" });
-  // Mantenemos editandoCronograma en true para que alternarEdicion se procese como "guardado de fila temporal"
   editandoCronograma = false; 
   alternarEdicionCronograma();
 };
@@ -576,5 +576,31 @@ const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 if (btnCerrarSesion) {
   btnCerrarSesion.addEventListener('click', () => {
     signOut(auth).then(() => { window.location.href = "index.html"; });
+  });
+}
+
+// ==========================================
+// 8. ESCUCHA DE FORMULARIO DE LOGIN (AGREGADO PARA VOLVER A DAR VIDA AL BOTÓN)
+// ==========================================
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById("loginEmail").value;
+    const contrasena = document.getElementById("loginPassword").value;
+    const txtError = document.getElementById("errorMessage");
+
+    try {
+      if (txtError) txtError.style.display = "none";
+      // Autentica contra Firebase. onAuthStateChanged se encargará automáticamente del resto del flujo
+      await signInWithEmailAndPassword(auth, email, contrasena);
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      if (txtError) {
+        txtError.textContent = "Credenciales incorrectas o usuario no registrado.";
+        txtError.style.display = "block";
+      }
+    }
   });
 }
