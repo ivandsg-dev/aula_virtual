@@ -7,6 +7,30 @@
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
+    <!-- PEGAR ESTO EN LA PÁGINA INTERNA DEL CURSO (Donde se ven las unidades) -->
+<div id="pantalla-primer-login" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.98); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="max-width: 400px; width: 90%; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #dee2e6;">
+        <h2 style="margin-top: 0; color: #333;">🔒 Actualiza tu contraseña</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Por seguridad, al ser tu primer ingreso al aula virtual debes definir una contraseña personal y secreta.</p>
+        
+        <form id="form-cambio-obligatorio">
+            <div style="margin-bottom: 15px;">
+                <label for="nueva-clave" style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;">Nueva Contraseña:</label>
+                <input type="password" id="nueva-clave" required minlength="6" placeholder="Mínimo 6 caracteres" style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="confirmar-clave" style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;">Confirmar Contraseña:</label>
+                <input type="password" id="confirmar-clave" required minlength="6" placeholder="Repite tu contraseña" style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 15px;">
+                Guardar y Entrar al Curso
+            </button>
+        </form>
+        <p id="error-cambio-clave" style="color: red; font-size: 13px; margin-top: 15px; display: none; text-align: center;"></p>
+    </div>
+</div>
 
     <!-- Encabezado del Curso -->
     <header>
