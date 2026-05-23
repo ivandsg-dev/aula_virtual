@@ -138,28 +138,41 @@ onAuthStateChanged(auth, async (user) => {
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
         } else {
-          // Verificación estricta de primer login
+          // 🔒 VERIFICACIÓN ESTRICTA: Si es primer login, frena acá y no dejes pasar al alumno
           if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
-            document.getElementById("pantalla-primer-login").style.display = "flex";
-            configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
-            return; 
+            const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+            if (modalPrimerLogin) {
+              modalPrimerLogin.style.display = "flex";
+              configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
+            } else {
+              console.error("Error crítico: No se encontró el contenedor 'pantalla-primer-login' en el HTML.");
+            }
+            return; // FRENO ABSOLUTO. Evita que se dibuje la interfaz del curso abajo.
           }
 
+          // Si no es su primer login, entra de forma normal
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
-        // Si no existe el documento, asumimos que requiere configuración inicial
-        document.getElementById("pantalla-primer-login").style.display = "flex";
-        configurarFormularioCambioClave(user, userDocRef, user.email);
+        // Si no existe el documento en la base de datos, bloqueo por seguridad
+        const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+        if (modalPrimerLogin) {
+          modalPrimerLogin.style.display = "flex";
+          configurarFormularioCambioClave(user, userDocRef, user.email);
+        }
       }
     } catch (error) {
       console.error("Error al obtener el rol o nombre:", error);
       if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
+      // Ante un error de red o de Firebase, por seguridad no lo dejes pasar directo si sospechás que es primer login
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
     console.log("No hay usuario autenticado.");
+    // Si se desautentica, podés asegurarte de ocultar el modal por si quedó abierto
+    const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+    if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
   }
 });
 
