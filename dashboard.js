@@ -532,21 +532,19 @@ if (btnCerrarSesion) {
 }
 
 // ==========================================
-// 9. VISTAS Y ROLES: CONTROL DE FLUJO (CORREGIDO)
+// 9. VISTAS Y ROLES: CONTROL DE FLUJO
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
   const txtSaludo = document.getElementById('saludo-usuario');
-  const loginBox = document.getElementById("loginForm"); // O el contenedor específico de la cajita de login
-  const welcomeContainer = document.querySelector('.welcome-container'); 
+  const loginBox = document.querySelector('.login-box');
+  const welcomeContainer = document.querySelector('.welcome-container');
   
   if (user) {
     console.log("🟢 RASTREO: Usuario autenticado detectado:", user.email);
     
-    // Ocultamos SOLO el formulario/caja de login, NO todo el contenedor principal
+    // En lugar de ocultar TODO el welcomeContainer (que mataba tu título),
+    // ocultamos solamente el bloque del formulario de login.
     if (loginBox) loginBox.style.display = "none";
-    
-    // ASEGURATE de que el contenedor del aula virtual esté VISIBLE
-    if (welcomeContainer) welcomeContainer.style.display = "block"; 
 
     try {
       const userDocRef = doc(db, "usuarios", user.uid);
@@ -561,7 +559,7 @@ onAuthStateChanged(auth, async (user) => {
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
           mostrarInterfazDocente();
         } else {
-          // Control de primer login para alumnos
+          // Filtro para el cambio de clave obligatorio
           if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
             const modalPrimerLogin = document.getElementById("pantalla-primer-login");
             if (modalPrimerLogin) {
@@ -575,7 +573,7 @@ onAuthStateChanged(auth, async (user) => {
           mostrarInterfazEstudiante(nombreMostrar, user.uid);
         }
       } else {
-        // Si está autenticado pero no existe en Firestore, asumimos alumno nuevo
+        // Usuario nuevo sin documento en Firestore
         const modalPrimerLogin = document.getElementById("pantalla-primer-login");
         if (modalPrimerLogin) {
           modalPrimerLogin.style.display = "flex";
@@ -588,11 +586,7 @@ onAuthStateChanged(auth, async (user) => {
       mostrarInterfazEstudiante(user.email, user.uid);
     }
   } else {
-    // Si no hay usuario, mostramos el login y ocultamos el contenido del aula
+    // Si no está logueado, se muestra la caja de login de forma prolija
     if (loginBox) loginBox.style.display = "block";
-    if (welcomeContainer) welcomeContainer.style.display = "none";
-    
-    const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-    if (modalPrimerLogin) modalPrimerLogin.style.display = "none";
   }
 });
