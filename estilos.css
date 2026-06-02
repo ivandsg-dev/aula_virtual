@@ -402,3 +402,54 @@ td {
     border-top: 1px dashed rgba(0,0,0,0.1);
     font-style: italic;
 }
+/* Caja Exclusiva del Nombre de Curso */
+.dashboard-course-card {
+    background: linear-gradient(135deg, #1e3a8a, #0f172a);
+    color: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 15px; /* Separación directa de la caja del alumno */
+    text-align: left;
+    border: 1px solid #1e40af;
+}
+.dashboard-course-card h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.dashboard-course-card p {
+    font-size: 14px;
+    color: #93c5fd;
+}
+
+/* Agrupador Estético de Unidad */
+.unidad-modulo-container {
+    margin-top: 30px;
+    border-left: 4px solid #2563eb;
+    padding-left: 15px;
+}
+
+/* Títulos Especiales de Unidades para el Alumno */
+.unidad-header-title {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Tabla de gestión independiente del docente */
+.tabla-gestion-docente button {
+    min-width: 130px;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+/* Corrección para la imagen fija de fondo en el Aula */
+#img-fondo-aula {
+    filter: blur(2px); /* Un toque sutil para que no distraiga al leer datos densos */
+}
