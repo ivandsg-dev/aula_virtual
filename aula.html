@@ -37,6 +37,56 @@
             <div id="contenedor-cronograma"></div>
         </section>
 
+
+        <!-- ========================================== -->
+        <!-- NUEVA SECCIÓN: FOROS Y INTERACCIÓN (DEBAJO DEL CRONOGRAMA) -->
+        <!-- ========================================== -->
+        <div class="foros-dashboard-section">
+            
+            <!-- FORO 1: NOVEDADES Y ANUNCIOS -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2>📢 Novedades y Anuncios <span id="alerta-novedad-global" class="badge-alerta-nuevo" style="display:none;">¡NUEVO!</span></h2>
+                </div>
+                
+                <!-- Panel de creación exclusivo para el docente (Oculto por defecto) -->
+                <div id="panel-crear-anuncio" class="admin-only" style="display: none; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed #cbd5e1;">
+                    <h4 style="margin-bottom:8px; font-size:14px; color:#1e293b;">Publicar Comunicado Oficial:</h4>
+                    <input type="text" id="anuncio-nuevo-titulo" placeholder="Título del anuncio..." class="input-inline" style="margin-bottom:8px; width:100%;">
+                    <textarea id="anuncio-nuevo-cuerpo" placeholder="Escribe el mensaje aquí..." class="input-inline" style="margin-bottom:8px; width:100%; height:60px; font-family:inherit;"></textarea>
+                    <button id="btn-publicar-anuncio" class="btn-action" style="background-color:#2563eb;">Postear Anuncio</button>
+                </div>
+
+                <details class="consigna-desplegable" open>
+                    <summary>📁 Historial de Comunicados del Docente</summary>
+                    <div id="lista-anuncios-contenedor" class="foro-lista-items">
+                        <p class="txt-muted" style="font-size:13px;">No hay comunicados cargados en este momento.</p>
+                    </div>
+                </details>
+            </section>
+
+            <!-- FORO 2: CONSULTAS Y DISCUSIÓN -->
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2>💬 Foro de Consultas <span id="alerta-foro-global" class="badge-alerta-nuevo" style="display:none;">¡NUEVO!</span></h2>
+                </div>
+                
+                <!-- Formulario abierto para que CUALQUIERA (Alumnos y Docentes) inicie un hilo -->
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0;">
+                    <h4 style="margin-bottom:8px; font-size:14px; color:#1e293b;">Crear una nueva consulta:</h4>
+                    <input type="text" id="foro-nuevo-titulo" placeholder="¿Qué duda o problema técnico tienes?" class="input-inline" style="margin-bottom:8px; width:100%;">
+                    <button id="btn-publicar-consulta" class="btn-action" style="width:100%; text-align:center;">🚀 Publicar en el Foro</button>
+                </div>
+
+                <details class="consigna-desplegable" open>
+                    <summary>👥 Hilos de Discusión Activos</summary>
+                    <div id="lista-consultas-contenedor" class="foro-lista-items">
+                        <p class="txt-muted" style="font-size:13px;">Nadie ha iniciado consultas aún. ¡Sé el primero!</p>
+                    </div>
+                </details>
+            </section>
+        </div>
+
         <!-- VISTA DOCENTE: PANEL DE GESTIÓN Y ENTREGAS SEPARADAS POR UNIDAD -->
         <main class="admin-view" style="display: none;">
             <section class="dashboard-card">
@@ -290,5 +340,15 @@
     </div>
 
     <script type="module" src="aula.js"></script>
+
+    <!-- POP-UP MODAL PARA DETALLES DE ANUNCIOS O HILOS DE DISCUSIÓN -->
+    <div id="modal-foro-popup" class="modal-popup-overlay" style="display: none;">
+        <div class="modal-popup-content">
+            <button class="btn-close-popup" onclick="cerrarModalForoPopup()">✕</button>
+            <div id="modal-foro-dinamico-body">
+                <!-- Se inyecta dinámicamente mediante JS -->
+            </div>
+        </div>
+    </div>
 </body>
 </html>
