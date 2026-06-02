@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula Virtual - The Data Hive</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <header class="dashboard-header">
+            <div class="header-brand">
+                <h1 id="saludo-usuario">Cargando datos...</h1>
+            </div>
+            <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
+        </header>
+
+        <section class="dashboard-card">
+            <div class="card-header">
+                <h2>Cronograma del Curso</h2>
+                <button id="btn-editar-cronograma" class="btn-action" style="display:none;">📝 Editar cronograma</button>
+            </div>
+            <div id="contenedor-cronograma">
+                </div>
+        </section>
+
+        <main class="admin-view" style="display: none;">
+            <section class="dashboard-card">
+                <div class="card-header">
+                    <h2>Panel de Control: Proyectos Recibidos</h2>
+                    <button id="btn-visibilidad-u1" class="btn-action" onclick="cambiarVisibilidadUnidad('unidad1')">👁️ Cambiar Visibilidad</button>
+                </div>
+                <div class="responsive-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Alumno / Mensaje</th>
+                                <th>Fecha Envió</th>
+                                <th>Entregable</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-entregas-u1">
+                            </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <main id="vista-estudiante" style="display: none;">
+            
+            <div id="bloqueo-unidad-1" class="alert-box alert-warning" style="display: none;">
+                🔒 <strong>Unidad Bloqueada:</strong> Esta sección estará disponible próximamente según el avance del cronograma.
+            </div>
+
+            <div id="contenido-unidad-1">
+                <section class="dashboard-card">
+                    <h2>Materiales de la Unidad 1</h2>
+                    <p class="txt-muted">Descargá los recursos prácticos y plantillas base para armar tus reportes en Looker Studio.</p>
+                    <div class="materiales-descarga" style="margin-top: 15px;">
+                        <a href="#" class="btn-link-download">📁 Descargar Data Set de Práctica (.csv)</a>
+                    </div>
+                </section>
+
+                <section class="dashboard-card">
+                    <h2>Entregar Proyecto Final (Unidad 1)</h2>
+                    <p id="leyenda-url" class="txt-muted">Pegá el enlace público o compartido de tu reporte final de Looker Studio para recibir tu feedback.</p>
+                    
+                    <form id="form-entrega" class="form-minimal">
+                        <div class="form-group">
+                            <label for="url-proyecto">Enlace del Reporte</label>
+                            <input type="url" id="url-proyecto" placeholder="https://lookerstudio.google.com/reporting/..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comentarios-proyecto">Notas Adicionales</label>
+                            <textarea id="comentarios-proyecto" placeholder="Dejale un comentario al docente sobre tu proceso o dudas..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit-app">Enviar Proyecto</button>
+                    </form>
+
+                    <div id="estado-pendiente" class="status-box status-waiting" style="display:none;">
+                        ⏳ <strong>Proyecto recibido:</strong> Tu reporte está en cola de evaluación por el docente. Te notificaremos aquí mismo cuando sea corregido.
+                    </div>
+                    <div id="estado-aprobado" class="status-box status-success" style="display:none;">
+                        🎉 <strong>¡Proyecto Aprobado!</strong> Felicitaciones, cumpliste con los objetivos de diseño y modelado.<br>
+                        <div class="feedback-container"><strong>Feedback del docente:</strong> <span id="feedback-aprobado"></span></div>
+                    </div>
+                    <div id="estado-revisar" class="status-box status-danger" style="display:none;">
+                        ⚠️ <strong>Requiere Ajustes:</strong> El docente dejó observaciones que debés corregir antes de aprobar.<br>
+                        <div class="feedback-container"><strong>Observaciones:</strong> <span id="feedback-revisar"></span></div>
+                        <button onclick="reabrirFormularioEntrega()" class="btn-secundario" style="margin-top: 10px;">Volver a enviar entrega</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+    </div>
+
+    <script type="module" src="aula.js"></script>
+</body>
+</html>
