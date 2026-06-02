@@ -6,7 +6,7 @@ import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/fi
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // INICIALIZACIÓN DE EMAILJS (Reemplaza con tu Public Key de EmailJS)
-emailjs.init({ publicKey: "TU_PUBLIC_KEY_DE_EMAILJS" });
+emailjs.init({ publicKey: "hB83knHaT6twiUZJ9" });
 
 const firebaseConfig = {
   apiKey: "AIzaSyBfSWaVPdbqtkxX7pLpCSWVehSVtK-olNY", 
