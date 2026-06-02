@@ -623,3 +623,12 @@ function abrirPopupConsultaHilo(consulta, id, nombreLector) {
 
   document.getElementById('modal-foro-popup').style.display = 'flex';
 }
+// ==========================================
+// CONTROL DE MODALES EN EL OBJETO WINDOWS (MÓDULOS ES6)
+// ==========================================
+window.cerrarModalForoPopup = function() {
+  const modal = document.getElementById('modal-foro-popup');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+};
