@@ -340,7 +340,7 @@ window.corregirEntregaAvanzada = async function(id, unidad, nombreAlumno, emailA
 
       // Llamada oficial a EmailJS
       // (Debes configurar estos IDs desde el panel de EmailJS)
-      emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', templateParams)
+      emailjs.send("service_oq9kgrq", "template_10lj365", templateParams)
         .then(() => {
           alert(`🎉 ¡Excelente! Se le envió un mail automático a ${nombreAlumno} notificando su graduación.`);
         }, (error) => {
