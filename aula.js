@@ -480,7 +480,7 @@ function abrirPopupAnuncio(anuncio, id) {
 }
 
 // ==========================================
-// 9. MÓDULO 2: FORO DE CONSULTAS Y DISCUSIÓN (BIDIRECCIONAL)
+// 9. MÓDULO 2: FORO DE CONSULTAS Y DISCUSIÓN (OPTIMIZADO CON ALERTA DE COMENTARIOS)
 // ==========================================
 function inicializarModuloConsultas(nombreUsuario, uidUsuario) {
   const btnPublicar = document.getElementById('btn-publicar-consulta');
@@ -495,7 +495,7 @@ function inicializarModuloConsultas(nombreUsuario, uidUsuario) {
           autorNombre: nombreUsuario,
           autorId: uidUsuario,
           fecha: new Date().toISOString(),
-          comentarios: [] // Array donde guardaremos las respuestas de alumnos/profes
+          comentarios: []
         });
         document.getElementById('foro-nuevo-titulo').value = "";
         alert("¡Consulta publicada! Ya está disponible para la comunidad.");
@@ -522,14 +522,24 @@ function inicializarModuloConsultas(nombreUsuario, uidUsuario) {
       const id = docSnap.id;
       if (!primerDocId) primerDocId = id;
 
-      const numComentarios = consulta.comentarios ? consulta.comentarios.length : 0;
+      const comentariosExistentes = consulta.comentarios ? consulta.comentarios.length : 0;
+      
+      // LOGICA DE REVISIÓN: ¿Hay comentarios que el usuario no vio?
+      const claveStorageComentarios = `vistos_comentarios_${id}`;
+      const comentariosVistosAnteriormente = parseInt(localStorage.getItem(claveStorageComentarios) || "0", 10);
+      
+      let badgeNuevasRespuestasHTML = "";
+      // Si hay más comentarios en la DB que los que el usuario vio en su navegador, mostramos la alerta
+      if (comentariosExistentes > comentariosVistosAnteriormente) {
+        badgeNuevasRespuestasHTML = `<span class="badge-comentarios-nuevos">¡Nuevas respuestas!</span>`;
+      }
 
       const item = document.createElement('div');
       item.className = 'item-foro-link';
       item.innerHTML = `
         <div>
-          <strong>❓ ${consulta.titulo}</strong><br>
-          <small class="txt-muted">Por ${consulta.autorNombre} • 💬 ${numComentarios} aportes</small>
+          <strong>❓ ${consulta.titulo}</strong> ${badgeNuevasRespuestasHTML}<br>
+          <small class="txt-muted">Por ${consulta.autorNombre} • 💬 ${comentariosExistentes} aportes</small>
         </div>
         <div><span class="btn-link" style="font-size:12px;">Participar ➔</span></div>
       `;
@@ -539,7 +549,6 @@ function inicializarModuloConsultas(nombreUsuario, uidUsuario) {
 
     const alertaForoGlobal = document.getElementById('alerta-foro-global');
     if (alertaForoGlobal) {
-      // Si hay una consulta nueva que el usuario actual no inició y no ha visto, prende la alarma
       if (ultimaConsultaIdSaved !== primerDocId && snapshot.docs[0].data().autorId !== uidUsuario) {
         alertaForoGlobal.style.display = 'inline-block';
       } else {
@@ -554,15 +563,19 @@ function abrirPopupConsultaHilo(consulta, id, nombreLector) {
   const alertaForoGlobal = document.getElementById('alerta-foro-global');
   if (alertaForoGlobal) alertaForoGlobal.style.display = 'none';
 
-  // Escuchamos los cambios en caliente de ESTA consulta específica por si alguien escribe mientras el pop-up está abierto
   onSnapshot(doc(db, "foros_consultas", id), (docSnap) => {
     if (!docSnap.exists()) return;
     const datosActualizados = docSnap.data();
     
+    const totalComentariosActuales = datosActualizados.comentarios ? datosActualizados.comentarios.length : 0;
+    
+    // Al abrir o recibir actualización con el modal abierto, marcamos todos como "leídos" en este dispositivo
+    localStorage.setItem(`vistos_comentarios_${id}`, totalComentariosActuales);
+    
     const bodyModal = document.getElementById('modal-foro-dinamico-body');
     let htmlComentarios = "";
 
-    if (datosActualizados.comentarios && datosActualizados.comentarios.length > 0) {
+    if (totalComentariosActuales > 0) {
       datosActualizados.comentarios.forEach(c => {
         htmlComentarios += `
           <div class="comentario-item">
@@ -583,7 +596,6 @@ function abrirPopupConsultaHilo(consulta, id, nombreLector) {
          <div style="max-height:180px; overflow-y:auto; margin-bottom:15px;">${htmlComentarios}</div>
       </div>
 
-      <!-- Formulario integrado para responder en el momento -->
       <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:15px;">
         <input type="text" id="input-nuevo-comentario-texto" placeholder="Escribe tu respuesta o sugerencia técnica..." class="input-inline" style="width:75%; margin-right:2%;">
         <button id="btn-enviar-comentario-foro" class="btn-action" style="width:20%; padding:8px 0;">Enviar</button>
@@ -603,14 +615,11 @@ function abrirPopupConsultaHilo(consulta, id, nombreLector) {
 
       try {
         await updateDoc(doc(db, "foros_consultas", id), { comentarios: listaComentariosActuales });
+        // Actualizamos inmediatamente el storage para que al escribir nosotros no se marque como "no leído"
+        localStorage.setItem(`vistos_comentarios_${id}`, listaComentariosActuales.length);
       } catch (e) { console.error(e); }
     };
   });
 
   document.getElementById('modal-foro-popup').style.display = 'flex';
 }
-
-// Funciones globales expuestas al Objeto Window para control del HTML
-window.cerrarModalForoPopup = function() {
-  document.getElementById('modal-foro-popup').style.display = 'none';
-};
