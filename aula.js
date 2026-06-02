@@ -566,12 +566,12 @@ onAuthStateChanged(auth, async (user) => {
       // Si ya está todo en orden (docente o alumno antiguo), lo redirigimos a la vista interna del curso.
       // Cambia "aula.html" por el nombre exacto que le vayas a dar a tu archivo interno del curso.
       console.log("➡️ Redirigiendo al contenido de la plataforma...");
-      window.location.href = "dashboard.html"; 
+      window.location.href = "aula.html"; 
 
     } catch (error) {
       console.error("❌ ERROR EN VERIFICACIÓN DE REDIRECCIÓN:", error);
       // En caso de falla, igual intentamos mandarlo a la plataforma
-      window.location.href = "dashboard.html";
+      window.location.href = "aula.html";
     }
   } else {
     // Si no está logueado, nos aseguramos de mostrar el formulario de acceso de The Data Hive
