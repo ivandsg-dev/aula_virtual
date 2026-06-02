@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aula Virtual - The Data Hive</title>
     <link rel="stylesheet" href="estilos.css">
+    <!-- Script de EmailJS oficial para el envío del correo automático -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
     <div class="background-overlay-container">
-        <img src="https://i.ibb.co/HfDLp1CB/Pngtree-hexagon-light-effect-blue-business-5903949.png" alt="Fondo Data Hive" id="img-fondo-aula">
+        <img src="https://d8285fmxt3duy.cloudfront.net/public/articulos/img/2023/aula-virtual.jpg" alt="Fondo Data Hive" id="img-fondo-aula">
     </div>
 
     <div class="dashboard-container">
         
+        <!-- CAJA SUPERIOR: NOMBRE DEL CURSO (IGUAL PARA AMBOS ROLES) -->
         <header class="dashboard-course-card">
             <h2>Curso Profesional de Looker Studio (Data Studio)</h2>
             <p>Especialización en Visualización y Modelado de Datos Eficientes</p>
@@ -25,6 +28,7 @@
             <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
         </header>
 
+        <!-- CRONOGRAMA -->
         <section class="dashboard-card">
             <div class="card-header">
                 <h2>Cronograma del Curso</h2>
@@ -33,12 +37,12 @@
             <div id="contenedor-cronograma"></div>
         </section>
 
+        <!-- VISTA DOCENTE: PANEL DE GESTIÓN Y ENTREGAS SEPARADAS POR UNIDAD -->
         <main class="admin-view" style="display: none;">
             <section class="dashboard-card">
                 <div class="card-header">
                     <h2>Panel de Control: Visibilidad y Contenidos</h2>
                 </div>
-                
                 <div class="responsive-table">
                     <table class="tabla-gestion-docente">
                         <thead>
@@ -51,189 +55,175 @@
                         <tbody>
                             <tr>
                                 <td><strong>Unidad 1:</strong> Tablas y bases de datos</td>
-                                <td class="text-center"><button id="btn-visibilidad-m1" class="btn-action" onclick="cambiarVisibilidadElemento('u1_materiales')">👁️ Cargar Material</button></td>
-                                <td class="text-center"><button id="btn-visibilidad-t1" class="btn-action" onclick="cambiarVisibilidadElemento('u1_entrega')">🔒 Cargar TP</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-m1" class="btn-action" onclick="cambiarVisibilidadElemento('u1_materiales')">👁️ Material</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-t1" class="btn-action" onclick="cambiarVisibilidadElemento('u1_entrega')">🔒 TP</button></td>
                             </tr>
                             <tr>
                                 <td><strong>Unidad 2:</strong> Filtros y Campos Calculados</td>
-                                <td class="text-center"><button id="btn-visibilidad-m2" class="btn-action" onclick="cambiarVisibilidadElemento('u2_materiales')">👁️ Cargar Material</button></td>
-                                <td class="text-center"><button id="btn-visibilidad-t2" class="btn-action" onclick="cambiarVisibilidadElemento('u2_entrega')">🔒 Cargar TP</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-m2" class="btn-action" onclick="cambiarVisibilidadElemento('u2_materiales')">👁️ Material</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-t2" class="btn-action" onclick="cambiarVisibilidadElemento('u2_entrega')">🔒 TP</button></td>
                             </tr>
                             <tr>
                                 <td><strong>Unidad 3:</strong> Combinación de Datos (Data Blending)</td>
-                                <td class="text-center"><button id="btn-visibilidad-m3" class="btn-action" onclick="cambiarVisibilidadElemento('u3_materiales')">👁️ Cargar Material</button></td>
-                                <td class="text-center"><button id="btn-visibilidad-t3" class="btn-action" onclick="cambiarVisibilidadElemento('u3_entrega')">🔒 Cargar TP</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-m3" class="btn-action" onclick="cambiarVisibilidadElemento('u3_materiales')">👁️ Material</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-t3" class="btn-action" onclick="cambiarVisibilidadElemento('u3_entrega')">🔒 TP</button></td>
                             </tr>
                             <tr>
                                 <td><strong>Unidad 4:</strong> Dashboards Avanzados y Casos de Negocio</td>
-                                <td class="text-center"><button id="btn-visibilidad-m4" class="btn-action" onclick="cambiarVisibilidadElemento('u4_materiales')">👁️ Cargar Material</button></td>
-                                <td class="text-center"><button id="btn-visibilidad-t4" class="btn-action" onclick="cambiarVisibilidadElemento('u4_entrega')">🔒 Cargar TP</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-m4" class="btn-action" onclick="cambiarVisibilidadElemento('u4_materiales')">👁️ Material</button></td>
+                                <td class="text-center"><button id="btn-visibilidad-t4" class="btn-action" onclick="cambiarVisibilidadElemento('u4_entrega')">🔒 TP</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </section>
 
+            <!-- CAJAS DE ENTREGAS SEPARADAS POR UNIDAD -->
             <section class="dashboard-card" style="margin-top: 25px;">
-                <div class="card-header">
-                    <h2>Proyectos Recibidos para Evaluar (Todas las Unidades)</h2>
-                </div>
+                <div class="card-header"><h2>Proyectos Recibidos - Unidad 1</h2></div>
                 <div class="responsive-table">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>Alumno / Mensaje</th>
-                                <th>Fecha Envió</th>
-                                <th>Entregable</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-entregas-u1"></tbody>
+                        <thead><tr><th>Alumno / Mensaje</th><th>Fecha Envió</th><th>Entregable</th><th class="text-center">Estado</th><th class="text-center">Acciones</th></tr></thead>
+                        <tbody id="lista-entregas-docente-u1"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-card" style="margin-top: 25px;">
+                <div class="card-header"><h2>Proyectos Recibidos - Unidad 2</h2></div>
+                <div class="responsive-table">
+                    <table>
+                        <thead><tr><th>Alumno / Mensaje</th><th>Fecha Envió</th><th>Entregable</th><th class="text-center">Estado</th><th class="text-center">Acciones</th></tr></thead>
+                        <tbody id="lista-entregas-docente-u2"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-card" style="margin-top: 25px;">
+                <div class="card-header"><h2>Proyectos Recibidos - Unidad 3</h2></div>
+                <div class="responsive-table">
+                    <table>
+                        <thead><tr><th>Alumno / Mensaje</th><th>Fecha Envió</th><th>Entregable</th><th class="text-center">Estado</th><th class="text-center">Acciones</th></tr></thead>
+                        <tbody id="lista-entregas-docente-u3"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-card" style="margin-top: 25px;">
+                <div class="card-header"><h2>Proyectos Recibidos - Unidad 4 (Cierre de Curso)</h2></div>
+                <div class="responsive-table">
+                    <table>
+                        <thead><tr><th>Alumno / Mensaje</th><th>Fecha Envió</th><th>Entregable</th><th class="text-center">Estado</th><th class="text-center">Acciones</th></tr></thead>
+                        <tbody id="lista-entregas-docente-u4"></tbody>
                     </table>
                 </div>
             </section>
         </main>
 
+        <!-- VISTA ESTUDIANTE: DESCRIPCIONES SIEMPRE VISIBLES Y SIN CARTEL DE BLOQUEO -->
         <main id="vista-estudiante" style="display: none;">
             
+            <!-- UNIDAD 1 -->
             <div class="unidad-modulo-container">
-                <div class="unidad-header-title">
-                    <h3>Unidad N° 1 - Tablas y bases de datos</h3>
+                <div class="unidad-header-title"><h3>Unidad N° 1 - Tablas y bases de datos</h3></div>
+                <div class="unidad-descripcion-fija">
+                    <strong>Eje temático:</strong> Introducción al ecosistema de BI. Conexión de fuentes primarias, tipos de tipos de datos, estructuras de tablas y preparación de hojas de cálculo eficientes antes de la visualización.
                 </div>
                 
-                <div id="bloqueo-u1_materiales" class="alert-box alert-warning" style="display: none;">🔒 Materiales de la Unidad 1 en preparación...</div>
-                <div id="contenido-u1_materiales" class="dashboard-card">
+                <div id="contenido-u1_materiales" class="dashboard-card" style="display: none;">
                     <h2>Materiales de la Unidad 1</h2>
-                    <p class="txt-muted">Descargá los recursos prácticos y plantillas base para armar tus reportes en Looker Studio.</p>
-                    <div class="materiales-descarga" style="margin-top: 15px;">
-                        <a href="#" class="btn-link-download">📁 Descargar Data Set de Práctica (.csv)</a>
-                    </div>
+                    <p class="txt-muted">Descargá los recursos prácticos y plantillas base.</p>
+                    <div style="margin-top: 15px;"><a href="#" class="btn-link-download">📁 Descargar Data Set (.csv)</a></div>
                 </div>
 
-                <div id="bloqueo-u1_entrega" class="alert-box alert-warning" style="display: none;">🔒 La consigna del Trabajo Práctico 1 no está habilitada aún.</div>
-                <div id="contenido-u1_entrega" class="dashboard-card">
+                <div id="contenido-u1_entrega" class="dashboard-card" style="display: none;">
                     <h2>Entregar Proyecto Final (Unidad 1)</h2>
-                    <p id="leyenda-url-u1" class="txt-muted">Pegá el enlace público de tu reporte de Looker Studio.</p>
-                    <form id="form-entrega-u1" class="form-minimal" data-unidad="1">
-                        <div class="form-group">
-                            <label>Enlace del Reporte</label>
-                            <input type="url" id="url-proyecto-u1" placeholder="https://lookerstudio.google.com/..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Notas Adicionales</label>
-                            <textarea id="comentarios-proyecto-u1" placeholder="Comentarios para el docente..."></textarea>
-                        </div>
+                    <form id="form-entrega-u1" class="form-minimal">
+                        <div class="form-group"><label>Enlace del Reporte</label><input type="url" id="url-proyecto-u1" required></div>
+                        <div class="form-group"><label>Notas Adicionales</label><textarea id="comentarios-proyecto-u1"></textarea></div>
                         <button type="submit" class="btn-submit-app">Enviar Proyecto 1</button>
                     </form>
                     <div id="estado-pendiente-u1" class="status-box status-waiting" style="display:none;">⏳ Proyecto recibido: En cola de evaluación.</div>
                     <div id="estado-aprobado-u1" class="status-box status-success" style="display:none;">🎉 ¡Proyecto Aprobado! <div class="feedback-container"><strong>Feedback:</strong> <span id="feedback-aprobado-u1"></span></div></div>
-                    <div id="estado-revisar-u1" class="status-box status-danger" style="display:none;">⚠️ Requires Ajustes: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u1"></span></div> <button onclick="reabrirFormularioEntrega('1')" class="btn-secundario" style="margin-top: 10px;">Reenviar</button></div>
+                    <div id="estado-revisar-u1" class="status-box status-danger" style="display:none;">⚠️ Ajustes requeridos: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u1"></span></div> <button onclick="reabrirFormularioEntrega('1')" class="btn-secundario" style="margin-top:10px;">Reenviar</button></div>
                 </div>
             </div>
 
+            <!-- UNIDAD 2 -->
             <div class="unidad-modulo-container">
-                <div class="unidad-header-title">
-                    <h3>Unidad N° 2 - Filtros y Campos Calculados</h3>
+                <div class="unidad-header-title"><h3>Unidad N° 2 - Filtros y Campos Calculados</h3></div>
+                <div class="unidad-descripcion-fija">
+                    <strong>Eje temático:</strong> Manipulación avanzada de datos mediante funciones lógicas (CASE WHEN), formateo de fechas y el uso correcto de filtros a nivel de gráfico y de página.
                 </div>
                 
-                <div id="bloqueo-u2_materiales" class="alert-box alert-warning" style="display: none;">🔒 Materiales de la Unidad 2 en preparación...</div>
-                <div id="contenido-u2_materiales" class="dashboard-card">
+                <div id="contenido-u2_materiales" class="dashboard-card" style="display: none;">
                     <h2>Materiales de la Unidad 2</h2>
-                    <p class="txt-muted">Uso de condicionales (CASE WHEN) y filtros dinámicos por dimensiones.</p>
-                    <div class="materiales-descarga" style="margin-top: 15px;">
-                        <a href="#" class="btn-link-download">📁 Descargar Guía Práctica de Funciones (.pdf)</a>
-                    </div>
+                    <p class="txt-muted">Uso de condicionales y dimensiones.</p>
+                    <div style="margin-top: 15px;"><a href="#" class="btn-link-download">📁 Descargar Guía Práctica (.pdf)</a></div>
                 </div>
 
-                <div id="bloqueo-u2_entrega" class="alert-box alert-warning" style="display: none;">🔒 La consigna del Trabajo Práctico 2 no está habilitada aún.</div>
-                <div id="contenido-u2_entrega" class="dashboard-card">
+                <div id="contenido-u2_entrega" class="dashboard-card" style="display: none;">
                     <h2>Entregar Proyecto Final (Unidad 2)</h2>
-                    <p id="leyenda-url-u2" class="txt-muted">Pegá el enlace público de tu reporte de Looker Studio.</p>
-                    <form id="form-entrega-u2" class="form-minimal" data-unidad="2">
-                        <div class="form-group">
-                            <label>Enlace del Reporte</label>
-                            <input type="url" id="url-proyecto-u2" placeholder="https://lookerstudio.google.com/..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Notas Adicionales</label>
-                            <textarea id="comentarios-proyecto-u2" placeholder="Comentarios para el docente..."></textarea>
-                        </div>
+                    <form id="form-entrega-u2" class="form-minimal">
+                        <div class="form-group"><label>Enlace del Reporte</label><input type="url" id="url-proyecto-u2" required></div>
+                        <div class="form-group"><label>Notas Adicionales</label><textarea id="comentarios-proyecto-u2"></textarea></div>
                         <button type="submit" class="btn-submit-app">Enviar Proyecto 2</button>
                     </form>
                     <div id="estado-pendiente-u2" class="status-box status-waiting" style="display:none;">⏳ Proyecto recibido: En cola de evaluación.</div>
                     <div id="estado-aprobado-u2" class="status-box status-success" style="display:none;">🎉 ¡Proyecto Aprobado! <div class="feedback-container"><strong>Feedback:</strong> <span id="feedback-aprobado-u2"></span></div></div>
-                    <div id="estado-revisar-u2" class="status-box status-danger" style="display:none;">⚠️ Requires Ajustes: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u2"></span></div> <button onclick="reabrirFormularioEntrega('2')" class="btn-secundario" style="margin-top: 10px;">Reenviar</button></div>
+                    <div id="estado-revisar-u2" class="status-box status-danger" style="display:none;">⚠️ Ajustes requeridos: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u2"></span></div> <button onclick="reabrirFormularioEntrega('2')" class="btn-secundario" style="margin-top:10px;">Reenviar</button></div>
                 </div>
             </div>
 
+            <!-- UNIDAD 3 -->
             <div class="unidad-modulo-container">
-                <div class="unidad-header-title">
-                    <h3>Unidad N° 3 - Combinación de Datos (Data Blending)</h3>
+                <div class="unidad-header-title"><h3>Unidad N° 3 - Combinación de Datos (Data Blending)</h3></div>
+                <div class="unidad-descripcion-fija">
+                    <strong>Eje temático:</strong> Integración de múltiples fuentes de información en un único lienzo. Claves de cruce, optimización de consultas y la lógica de combinaciones relacionales.
                 </div>
                 
-                <div id="bloqueo-u3_materiales" class="alert-box alert-warning" style="display: none;">🔒 Materiales de la Unidad 3 en preparación...</div>
-                <div id="contenido-u3_materiales" class="dashboard-card">
+                <div id="contenido-u3_materiales" class="dashboard-card" style="display: none;">
                     <h2>Materiales de la Unidad 3</h2>
-                    <p class="txt-muted">Aprende a unificar tablas usando LEFT JOIN e INNER JOIN dentro de la plataforma.</p>
-                    <div class="materiales-descarga" style="margin-top: 15px;">
-                        <a href="#" class="btn-link-download">📁 Descargar Set de Datos Combinados (.xlsx)</a>
-                    </div>
+                    <p class="txt-muted">Unificación de tablas mediante llaves primarias.</p>
+                    <div style="margin-top: 15px;"><a href="#" class="btn-link-download">📁 Descargar Set Combinado (.xlsx)</a></div>
                 </div>
 
-                <div id="bloqueo-u3_entrega" class="alert-box alert-warning" style="display: none;">🔒 La consigna del Trabajo Práctico 3 no está habilitada aún.</div>
-                <div id="contenido-u3_entrega" class="dashboard-card">
+                <div id="contenido-u3_entrega" class="dashboard-card" style="display: none;">
                     <h2>Entregar Proyecto Final (Unidad 3)</h2>
-                    <p id="leyenda-url-u3" class="txt-muted">Pegá el enlace público de tu reporte de Looker Studio.</p>
-                    <form id="form-entrega-u3" class="form-minimal" data-unidad="3">
-                        <div class="form-group">
-                            <label>Enlace del Reporte</label>
-                            <input type="url" id="url-proyecto-u3" placeholder="https://lookerstudio.google.com/..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Notas Adicionales</label>
-                            <textarea id="comentarios-proyecto-u3" placeholder="Comentarios para el docente..."></textarea>
-                        </div>
+                    <form id="form-entrega-u3" class="form-minimal">
+                        <div class="form-group"><label>Enlace del Reporte</label><input type="url" id="url-proyecto-u3" required></div>
+                        <div class="form-group"><label>Notas Adicionales</label><textarea id="comentarios-proyecto-u3"></textarea></div>
                         <button type="submit" class="btn-submit-app">Enviar Proyecto 3</button>
                     </form>
                     <div id="estado-pendiente-u3" class="status-box status-waiting" style="display:none;">⏳ Proyecto recibido: En cola de evaluación.</div>
                     <div id="estado-aprobado-u3" class="status-box status-success" style="display:none;">🎉 ¡Proyecto Aprobado! <div class="feedback-container"><strong>Feedback:</strong> <span id="feedback-aprobado-u3"></span></div></div>
-                    <div id="estado-revisar-u3" class="status-box status-danger" style="display:none;">⚠️ Requires Ajustes: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u3"></span></div> <button onclick="reabrirFormularioEntrega('3')" class="btn-secundario" style="margin-top: 10px;">Reenviar</button></div>
+                    <div id="estado-revisar-u3" class="status-box status-danger" style="display:none;">⚠️ Ajustes requeridos: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u3"></span></div> <button onclick="reabrirFormularioEntrega('3')" class="btn-secundario" style="margin-top:10px;">Reenviar</button></div>
                 </div>
             </div>
 
+            <!-- UNIDAD 4 -->
             <div class="unidad-modulo-container">
-                <div class="unidad-header-title">
-                    <h3>Unidad N° 4 - Dashboards Avanzados y Casos de Negocio</h3>
+                <div class="unidad-header-title"><h3>Unidad N° 4 - Dashboards Avanzados y Casos de Negocio</h3></div>
+                <div class="unidad-descripcion-fija">
+                    <strong>Eje temático:</strong> Diseño de tableros de control ejecutivos de alto impacto. Storytelling de datos, experiencia de usuario (UX/UI) y metodologías ágiles de entrega de reportes.
                 </div>
                 
-                <div id="bloqueo-u4_materiales" class="alert-box alert-warning" style="display: none;">🔒 Materiales de la Unidad 4 en preparación...</div>
-                <div id="contenido-u4_materiales" class="dashboard-card">
+                <div id="contenido-u4_materiales" class="dashboard-card" style="display: none;">
                     <h2>Materiales de la Unidad 4</h2>
-                    <p class="txt-muted">Estrategias de Storytelling de Datos y UX aplicadas a tomadores de decisiones.</p>
-                    <div class="materiales-descarga" style="margin-top: 15px;">
-                        <a href="#" class="btn-link-download">📁 Descargar Checklist de Diseño Final (.pdf)</a>
-                    </div>
+                    <p class="txt-muted">Diseño estratégico enfocado al negocio.</p>
+                    <div style="margin-top: 15px;"><a href="#" class="btn-link-download">📁 Descargar Checklist Final (.pdf)</a></div>
                 </div>
 
-                <div id="bloqueo-u4_entrega" class="alert-box alert-warning" style="display: none;">🔒 La consigna del Trabajo Práctico 4 no está habilitada aún.</div>
-                <div id="contenido-u4_entrega" class="dashboard-card">
+                <div id="contenido-u4_entrega" class="dashboard-card" style="display: none;">
                     <h2>Entregar Proyecto Final (Unidad 4)</h2>
-                    <p id="leyenda-url-u4" class="txt-muted">Pegá el enlace público de tu reporte de Looker Studio.</p>
-                    <form id="form-entrega-u4" class="form-minimal" data-unidad="4">
-                        <div class="form-group">
-                            <label>Enlace del Reporte</label>
-                            <input type="url" id="url-proyecto-u4" placeholder="https://lookerstudio.google.com/..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Notas Adicionales</label>
-                            <textarea id="comentarios-proyecto-u4" placeholder="Comentarios para el docente..."></textarea>
-                        </div>
+                    <form id="form-entrega-u4" class="form-minimal">
+                        <div class="form-group"><label>Enlace del Reporte</label><input type="url" id="url-proyecto-u4" required></div>
+                        <div class="form-group"><label>Notas Adicionales</label><textarea id="comentarios-proyecto-u4"></textarea></div>
                         <button type="submit" class="btn-submit-app">Enviar Proyecto 4</button>
                     </form>
                     <div id="estado-pendiente-u4" class="status-box status-waiting" style="display:none;">⏳ Proyecto recibido: En cola de evaluación.</div>
                     <div id="estado-aprobado-u4" class="status-box status-success" style="display:none;">🎉 ¡Proyecto Aprobado! <div class="feedback-container"><strong>Feedback:</strong> <span id="feedback-aprobado-u4"></span></div></div>
-                    <div id="estado-revisar-u4" class="status-box status-danger" style="display:none;">⚠️ Requires Ajustes: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u4"></span></div> <button onclick="reabrirFormularioEntrega('4')" class="btn-secundario" style="margin-top: 10px;">Reenviar</button></div>
+                    <div id="estado-revisar-u4" class="status-box status-danger" style="display:none;">⚠️ Ajustes requeridos: <div class="feedback-container"><strong>Obs:</strong> <span id="feedback-revisar-u4"></span></div> <button onclick="reabrirFormularioEntrega('4')" class="btn-secundario" style="margin-top:10px;">Reenviar</button></div>
                 </div>
             </div>
 
