@@ -404,23 +404,24 @@ td {
 }
 /* Caja Exclusiva del Nombre de Curso */
 .dashboard-course-card {
-    background: linear-gradient(135deg, #1e3a8a, #0f172a);
-    color: #ffffff;
-    padding: 25px;
+    background-color: #f8fafc; /* Gris muy claro y limpio */
+    color: #1e293b; /* Texto gris oscuro/azul para contraste alto */
+    padding: 20px 25px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    margin-bottom: 15px; /* Separación directa de la caja del alumno */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
     text-align: left;
-    border: 1px solid #1e40af;
+    border: 1px solid #e2e8f0; /* Borde sutil */
 }
 .dashboard-course-card h2 {
     font-size: 22px;
-    font-weight: 600;
+    font-weight: 700;
+    color: #0f172a; /* Título bien marcado */
     margin-bottom: 5px;
 }
 .dashboard-course-card p {
     font-size: 14px;
-    color: #93c5fd;
+    color: #64748b; /* Subtítulo legible */
 }
 
 /* Agrupador Estético de Unidad */
@@ -452,4 +453,24 @@ td {
 /* Corrección para la imagen fija de fondo en el Aula */
 #img-fondo-aula {
     filter: blur(2px); /* Un toque sutil para que no distraiga al leer datos densos */
+}
+
+/* Caja de Descripción Fija de la Unidad */
+.unidad-descripcion-fija {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.5;
+}
+
+/* Quitamos la línea azul y limpiamos el contenedor de la unidad */
+.unidad-modulo-container {
+    margin-top: 35px;
+    border-left: none; /* Línea azul eliminada */
+    padding-left: 0;
 }
