@@ -364,11 +364,15 @@ onAuthStateChanged(auth, async (user) => {
         const datos = userDocSnap.data();
         const nombre = datos.nombre || user.email;
         if (datos.rol === "docente") {
+          inicializarModuloAnuncios(true);
+inicializarModuloConsultas(nombre, user.uid);
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombre}`;
           mostrarInterfazDocente();
         } else {
           if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombre}`;
           mostrarInterfazEstudiante(nombre, user.uid);
+          inicializarModuloAnuncios(false);
+inicializarModuloConsultas(nombre, user.uid);
         }
       }
     } catch (e) { console.error(e); }
