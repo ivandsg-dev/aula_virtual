@@ -474,3 +474,59 @@ td {
     border-left: none; /* Línea azul eliminada */
     padding-left: 0;
 }
+
+/* Contenedor del Enunciado Desplegable (Consignas del TP) */
+.consigna-desplegable {
+    margin-top: 15px;
+    background-color: #f1f5f9; /* Gris sutil para diferenciarlo del fondo de la tarjeta */
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+/* El encabezado que hace clic */
+.consigna-desplegable summary {
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    list-style: none; /* Quita la flecha por defecto en algunos navegadores */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    outline: none;
+    user-select: none;
+}
+
+/* Añadimos un indicador visual personalizado mediante CSS */
+.consigna-desplegable summary::after {
+    content: "▼";
+    font-size: 11px;
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+
+/* Rotación de la flecha cuando está abierto */
+.consigna-desplegable[open] summary::after {
+    transform: rotate(180deg);
+}
+
+/* Cuerpo del texto largo dentro del desplegable */
+.consigna-cuerpo-texto {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+/* Estilo para las listas internas de las consignas */
+.consigna-cuerpo-texto ul {
+    margin-left: 20px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.consigna-cuerpo-texto li {
+    margin-bottom: 6px;
+}
