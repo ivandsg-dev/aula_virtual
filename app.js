@@ -40,7 +40,7 @@ loginForm.addEventListener('submit', (e) => {
             console.log("Usuario logueado con éxito:", user.uid);
             
             // Redirigir al alumno al panel principal del curso
-            window.location.href = "dashboard.html";
+            window.location.href = "aula.html";
         })
         .catch((error) => {
             // Si hay un error (ej: contraseña incorrecta o usuario no existe)
@@ -55,6 +55,6 @@ loginForm.addEventListener('submit', (e) => {
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // Si ya está logueado, lo mandamos al dashboard
-        window.location.href = "dashboard.html";
+        window.location.href = "aula.html";
     }
 });
