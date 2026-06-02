@@ -532,18 +532,15 @@ if (btnCerrarSesion) {
 }
 
 // ==========================================
-// 9. VISTAS Y ROLES: CONTROL DE FLUJO
+// 9. VISTAS Y ROLES: CONTROL DE FLUJO (REDIRECCIÓN)
 // ==========================================
 onAuthStateChanged(auth, async (user) => {
-  const txtSaludo = document.getElementById('saludo-usuario');
   const loginBox = document.querySelector('.login-box');
-  const welcomeContainer = document.querySelector('.welcome-container');
   
   if (user) {
     console.log("🟢 RASTREO: Usuario autenticado detectado:", user.email);
     
-    // En lugar de ocultar TODO el welcomeContainer (que mataba tu título),
-    // ocultamos solamente el bloque del formulario de login.
+    // Ocultamos el login para que no parpadee mientras procesa
     if (loginBox) loginBox.style.display = "none";
 
     try {
@@ -552,41 +549,32 @@ onAuthStateChanged(auth, async (user) => {
 
       if (userDocSnap.exists()) {
         const datosUsuario = userDocSnap.data();
-        const rol = datosUsuario.rol;
-        const nombreMostrar = datosUsuario.nombre || user.email; 
-
-        if (rol === "docente") {
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombreMostrar}`;
-          mostrarInterfazDocente();
-        } else {
-          // Filtro para el cambio de clave obligatorio
-          if (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined) {
-            const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-            if (modalPrimerLogin) {
-              modalPrimerLogin.style.display = "flex";
-              configurarFormularioCambioClave(user, userDocRef, nombreMostrar);
-            }
-            return; 
+        
+        // FILTRO CRÍTICO: Si es un alumno que entra por primera vez, 
+        // abrimos el modal de cambio de clave aquí mismo antes de dejarlo pasar.
+        if (datosUsuario.rol === "estudiante" && (datosUsuario.primerLogin === true || datosUsuario.primerLogin === undefined)) {
+          const modalPrimerLogin = document.getElementById("pantalla-primer-login");
+          if (modalPrimerLogin) {
+            modalPrimerLogin.style.display = "flex";
+            configurarFormularioCambioClave(user, userDocRef, datosUsuario.nombre || user.email);
           }
-
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombreMostrar}`;
-          mostrarInterfazEstudiante(nombreMostrar, user.uid);
-        }
-      } else {
-        // Usuario nuevo sin documento en Firestore
-        const modalPrimerLogin = document.getElementById("pantalla-primer-login");
-        if (modalPrimerLogin) {
-          modalPrimerLogin.style.display = "flex";
-          configurarFormularioCambioClave(user, userDocRef, user.email);
+          return; // Frena la redirección hasta que cambie la clave
         }
       }
+
+      // 🚀 ¡AQUÍ SE PRODUCE EL INGRESO!
+      // Si ya está todo en orden (docente o alumno antiguo), lo redirigimos a la vista interna del curso.
+      // Cambia "aula.html" por el nombre exacto que le vayas a dar a tu archivo interno del curso.
+      console.log("➡️ Redirigiendo al contenido de la plataforma...");
+      window.location.href = "dashboard.html"; 
+
     } catch (error) {
-      console.error("❌ ERROR EN FLUJO PRINCIPAL:", error);
-      if (txtSaludo) txtSaludo.innerHTML = `Usuario: ${user.email}`;
-      mostrarInterfazEstudiante(user.email, user.uid);
+      console.error("❌ ERROR EN VERIFICACIÓN DE REDIRECCIÓN:", error);
+      // En caso de falla, igual intentamos mandarlo a la plataforma
+      window.location.href = "dashboard.html";
     }
   } else {
-    // Si no está logueado, se muestra la caja de login de forma prolija
+    // Si no está logueado, nos aseguramos de mostrar el formulario de acceso de The Data Hive
     if (loginBox) loginBox.style.display = "block";
   }
 });
