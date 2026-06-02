@@ -11,19 +11,45 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    /* Imagen de fondo solicitada con un degradado sutil encima para dar contraste frío */
-    background: linear-gradient(rgba(248, 250, 252, 0.85), rgba(30, 41, 59, 0.4)), 
-                url('https://drive.google.com/uc?id=1yA_UFhdS5CSHMTrJ0Zkwyw-rf4r-0t12');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-color: #0f172a; /* Color oscuro de respaldo por si tarda en cargar la imagen */
     color: #1e293b; 
     display: flex;
-    flex-direction: column; /* Cambiado para posicionar el footer abajo */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* 🆕 ESTILOS PARA FORZAR LA IMAGEN DE DRIVE EN FONDO COMPLETO */
+.background-overlay-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* Se posiciona detrás de absolutamente todo */
+    overflow: hidden;
+}
+
+.background-overlay-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Se estira perfectamente cubriendo las esquinas sin deformarse */
+    pointer-events: none;
+}
+
+/* Capa de contraste sutil encima de la imagen para que tu caja blanca resalte */
+.background-overlay-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(248, 250, 252, 0.4), rgba(15, 23, 42, 0.6));
 }
 
 /* ==========================================
