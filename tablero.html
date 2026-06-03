@@ -5,24 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tablero de Control - Aula Virtual</title>
     <link rel="stylesheet" href="estilos.css">
-    <!-- Cargamos EmailJS para los envíos masivos -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <style>
+        /* Forzamos que el fondo herede la identidad visual del aula */
+        body {
+            background-image: var(--fondo-aula, url('assets/img/background.png')); /* Busca tu imagen si usas variables */
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        
+        /* Estilo para los semáforos puros en forma de círculos */
+        .semaforo {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            vertical-align: middle;
+        }
+        .semaforo-verde { background-color: #2ecc71; }
+        .semaforo-amarillo { background-color: #f1c40f; }
+        .semaforo-naranja { background-color: #e67e22; }
+        .semaforo-rojo { background-color: #e74c3c; }
+        
+        /* Centrado para la columna de los semáforos */
+        .tabla-seguimiento td {
+            text-align: center;
+        }
+        .tabla-seguimiento td:first-child {
+            text-align: left; /* El nombre del alumno se queda a la izquierda */
+        }
+    </style>
 </head>
 <body>
 
     <div class="main-container">
-        <!-- 1. ENCABEZADO INSTITUCIONAL (Look & Feel idéntico al aula) -->
+        
         <header class="aula-header">
             <div class="header-banner">
                 <h1>Panel de Gestión Docente</h1>
-                <p>Seguimiento de alumnos y comunicaciones masivas</p>
-            </div>
+                <p>Curso: Visualización de Datos con Looker Studio</p> </div>
         </header>
 
-        <!-- 2. BARRA DE BIENVENIDA Y ACCIONES PRINCIPALES -->
         <section class="user-welcome-bar">
             <div class="welcome-txt">
-                <p>Profesor: <strong id="docente-nombre">Cargando...</strong></p>
+                <p>Instructor activo: <strong id="docente-nombre">Cargando...</strong></p>
             </div>
             <div class="welcome-actions">
                 <a href="aula.html" class="btn-secondary">Volver al Aula ➔</a>
@@ -30,22 +59,20 @@
             </div>
         </section>
 
-        <!-- 3. SECCIÓN DEL SEGUIMIENTO ACADÉMICO -->
         <section class="dashboard-block-section">
             <div class="block-header-flex">
                 <h2>📊 Seguimiento de Alumnos</h2>
                 <div class="table-tools">
                     <input type="text" id="buscador-alumnos" placeholder="🔍 Buscar alumno por nombre..." class="input-search">
-                    <button id="btn-exportar-csv" class="btn-action-success">📥 Exportar a Google Sheets</button>
+                    <button id="btn-exportar-csv" class="btn-action-success">📥 Exportar a CSV</button>
                 </div>
             </div>
 
-            <!-- Grilla Dinámica -->
             <div class="table-responsive-container">
                 <table class="tabla-seguimiento">
                     <thead>
                         <tr>
-                            <th>Alumno</th>
+                            <th style="text-align: left;">Alumno</th>
                             <th>Último Login</th>
                             <th>TP 1</th>
                             <th>TP 2</th>
@@ -62,13 +89,11 @@
             </div>
         </section>
 
-        <!-- 4. SECCIÓN DE COMUNICACIONES MASIVAS (EmailJS) -->
         <section class="dashboard-block-section">
             <h2>📧 Centro de Comunicaciones Masivas</h2>
             <p class="section-desc">Selecciona una plantilla para enviar una notificación por correo electrónico a todos tus alumnos registrados.</p>
             
             <div class="grid-comunicaciones">
-                <!-- Bloques de disparadores -->
                 <div class="card-comunicacion">
                     <h3>🚀 Inicio del Curso</h3>
                     <p>Envía la bienvenida oficial y el enlace de acceso al aula virtual.</p>
@@ -108,7 +133,6 @@
         </section>
     </div>
 
-    <!-- Vinculamos la lógica de Firebase y eventos (la crearemos en el siguiente paso) -->
     <script type="module" src="tablero.js"></script>
 </body>
 </html>
