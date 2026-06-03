@@ -30,12 +30,19 @@
             <p>Especialización en Visualización y Modelado de Datos Eficientes</p>
         </header>
         
-        <header class="dashboard-header">
-            <div class="header-brand">
-                <h1 id="saludo-usuario">Cargando datos...</h1>
-            </div>
-            <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
-        </header>
+<header class="dashboard-header">
+    <div class="header-brand">
+        <h1 id="saludo-usuario">Cargando datos...</h1>
+    </div>
+    <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+        
+        <a href="tablero.html" id="btn-ir-tablero" class="btn-action" style="display: none; background-color: #f59e0b; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 14px;">
+            📊 Tablero Docente
+        </a>
+        
+        <button id="btnCerrarSesion" class="btn-logout">Cerrar Sesión</button>
+    </div>
+</header>
 
         <!-- CRONOGRAMA -->
         <section class="dashboard-card">
