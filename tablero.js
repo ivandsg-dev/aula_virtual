@@ -120,17 +120,19 @@ function renderizarTabla(alumnos) {
   });
 }
 
+// Lógica de semáforos puros (Solo círculos de color)
 function obtenerBadgeStatus(status) {
   const st = (status || "rojo").toLowerCase().trim();
 
+  // Devolvemos solo el círculo con un "title" para que si pasas el mouse arriba, te diga qué significa
   if (st === "aprobado" || st === "verde") {
-    return `<span class="status-badge status-verde">Aprobado</span>`;
+    return `<span class="semaforo semaforo-verde" title="Aprobado"></span>`;
   } else if (st === "esperando revision docente" || st === "amarillo") {
-    return `<span class="status-badge status-amarillo">Esperando Corrección</span>`;
+    return `<span class="semaforo semaforo-amarillo" title="Esperando Corrección"></span>`;
   } else if (st === "esperando correcciones alumno" || st === "naranja") {
-    return `<span class="status-badge status-naranja">Reentrega Alumno</span>`;
+    return `<span class="semaforo semaforo-naranja" title="Reentrega Alumno"></span>`;
   } else {
-    return `<span class="status-badge status-rojo">No Entregado</span>`;
+    return `<span class="semaforo semaforo-rojo" title="No Entregado"></span>`;
   }
 }
 
