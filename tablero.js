@@ -230,27 +230,39 @@ window.despacharMensajeMasivo = async function(tipoPlantilla) {
 };
 
 // ==========================================================================
-// MOTOR EXTRA: ALERTAS PARA ALUMNOS REZAGADOS
+// MOTOR EXTRA: ALERTAS PARA ALUMNOS REZAGADOS (Versión Inteligente Automatizada)
 // ==========================================================================
 const btnRezagados = document.getElementById("btn-alerta-rezagados");
 if (btnRezagados) {
   btnRezagados.onclick = async () => {
+    if (listaAlumnosGlobal.length === 0) return alert("No hay alumnos cargados.");
+
+    // Detectamos en tiempo real qué TPs ya están activos en la cursada.
+    // Si al menos un alumno tiene un estado diferente a "rojo", asumimos que el TP ya se habilitó.
+    const tp1Activo = listaAlumnosGlobal.some(al => (al.status_tp1 && al.status_tp1 !== "rojo"));
+    const tp2Activo = listaAlumnosGlobal.some(al => (al.status_tp2 && al.status_tp2 !== "rojo"));
+    const tp3Activo = listaAlumnosGlobal.some(al => (al.status_tp3 && al.status_tp3 !== "rojo"));
+    const tp4Activo = listaAlumnosGlobal.some(al => (al.status_tp4 && al.status_tp4 !== "rojo"));
+
+    // Función auxiliar para saber si un estado califica como "pendiente"
+    const esPendiente = (status) => {
+      const st = (status || "rojo").toLowerCase().trim();
+      return st === "rojo" || st.includes("naranja");
+    };
+
+    // Filtramos a los alumnos rezagados mirando ÚNICAMENTE los TPs que ya están activos
     const rezagados = listaAlumnosGlobal.filter(al => {
-      return (al.status_tp1 || "rojo") === "rojo" || 
-             (al.status_tp2 || "rojo") === "rojo" || 
-             (al.status_tp3 || "rojo") === "rojo" || 
-             (al.status_tp4 || "rojo") === "rojo" ||
-             (al.status_tp1 || "").toLowerCase().includes("naranja") ||
-             (al.status_tp2 || "").toLowerCase().includes("naranja") ||
-             (al.status_tp3 || "").toLowerCase().includes("naranja") ||
-             (al.status_tp4 || "").toLowerCase().includes("naranja");
+      return (tp1Activo && esPendiente(al.status_tp1)) ||
+             (tp2Activo && esPendiente(al.status_tp2)) ||
+             (tp3Activo && esPendiente(al.status_tp3)) ||
+             (tp4Activo && esPendiente(al.status_tp4));
     });
 
     if (rezagados.length === 0) {
-      return alert("🎉 ¡Excelente noticia! Todos tus alumnos están al día con sus entregas.");
+      return alert("🎉 ¡Excelente noticia! Todos tus alumnos están al día con las unidades activas.");
     }
 
-    const proceder = confirm(`Se detectaron ${rezagados.length} alumnos con entregas pendientes o reentregas asignadas. ¿Deseas enviarles un correo automático de aviso?`);
+    const proceder = confirm(`Se detectaron ${rezagados.length} alumnos con entregas pendientes en las unidades activas. ¿Deseas enviarles un correo automático de aviso?`);
     if (!proceder) return;
 
     const TEMPLATE_REZAGADOS_ID = 'TEMPLATE_ID_REZAGADOS'; 
@@ -258,10 +270,12 @@ if (btnRezagados) {
 
     for (const al of rezagados) {
       let pendientesTexto = [];
-      if (!al.status_tp1 || al.status_tp1 === "rojo" || al.status_tp1.includes("naranja")) pendientesTexto.push("Trabajo Práctico 1");
-      if (!al.status_tp2 || al.status_tp2 === "rojo" || al.status_tp2.includes("naranja")) pendientesTexto.push("Trabajo Práctico 2");
-      if (!al.status_tp3 || al.status_tp3 === "rojo" || al.status_tp3.includes("naranja")) pendientesTexto.push("Trabajo Práctico 3");
-      if (!al.status_tp4 || al.status_tp4 === "rojo" || al.status_tp4.includes("naranja")) pendientesTexto.push("Trabajo Práctico 4");
+      
+      // Armamos la lista de reclamos basándonos solo en lo que está activo y debe
+      if (tp1Activo && esPendiente(al.status_tp1)) pendientesTexto.push("Trabajo Práctico 1");
+      if (tp2Activo && esPendiente(al.status_tp2)) pendientesTexto.push("Trabajo Práctico 2");
+      if (tp3Activo && esPendiente(al.status_tp3)) pendientesTexto.push("Trabajo Práctico 3");
+      if (tp4Activo && esPendiente(al.status_tp4)) pendientesTexto.push("Trabajo Práctico 4");
 
       const parametrosTemplate = {
         to_email: al.email,
@@ -276,6 +290,6 @@ if (btnRezagados) {
       } catch (e) { console.error(e); }
     }
 
-    alert(`🚀 Campaña de alertas finalizada. Se notificó a ${contadorFuegosApagados} alumnos rezagados.`);
+    alert(`🚀 Campaña de alertas finalizada. Se notificó a ${contadorFuegosApagados} alumnos rezagados sin incluir módulos futuros.`);
   };
 }
