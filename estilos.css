@@ -635,3 +635,211 @@ td {
     background: none; border: none;
     font-size: 18px; cursor: pointer; color: #64748b;
 }
+
+/* ==========================================================================
+   TABLERO DE CONTROL DOCENTE (tablero.html)
+   ========================================================================== */
+
+.dashboard-block-section {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2e8f0;
+}
+
+.block-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
+}
+
+/* Herramientas de la tabla (Buscador y exportador) */
+.table-tools {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.input-search {
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 260px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-search:focus {
+    border-color: #3b82f6;
+}
+
+.btn-action-success {
+    background-color: #16a34a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-action-success:hover {
+    background-color: #15803d;
+}
+
+/* Tabla Estilizada */
+.table-responsive-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-seguimiento {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+.tabla-seguimiento th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 12px 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tabla-seguimiento td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+}
+
+.tabla-seguimiento tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* El Semáforo de Status (Badges con tus colores exactos) */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-rojo {
+    background-color: #fee2e2;
+    color: #991b1b; /* No entregado */
+}
+
+.status-naranja {
+    background-color: #ffedd5;
+    color: #c2410c; /* Esperando correcciones alumno */
+}
+
+.status-amarillo {
+    background-color: #fef9c3;
+    color: #854d0e; /* Esperando revisión docente */
+}
+
+.status-verde {
+    background-color: #dcfce7;
+    color: #166534; /* Aprobado */
+}
+
+/* Centro de Comunicaciones Masivas */
+.section-desc {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.grid-comunicaciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.card-comunicacion, .card-comunicacion-alert {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #fafafa;
+}
+
+.card-comunicacion h3 {
+    font-size: 15px;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.card-comunicacion p, .card-comunicacion-alert p {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.btn-comunicar {
+    background-color: #475569;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.btn-comunicar:hover {
+    background-color: #334155;
+}
+
+/* Card especial de Alerta Rezagados */
+.card-comunicacion-alert {
+    background-color: #fff7ed;
+    border-color: #ffedd5;
+}
+
+.card-comunicacion-alert h3 {
+    font-size: 15px;
+    color: #c2410c;
+    margin-bottom: 8px;
+}
+
+.btn-comunicar-alert {
+    background-color: #ea580c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.btn-comunicar-alert:hover {
+    background-color: #c2410c;
+}
+
+.txt-centered { text-align: center; color: #64748b; }
