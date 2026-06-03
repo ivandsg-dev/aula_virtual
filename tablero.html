@@ -7,16 +7,42 @@
     <link rel="stylesheet" href="estilos.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     
-    <style>
-        /* Forzamos que el fondo herede la identidad visual del aula */
+<style>
+        /* Forzamos el fondo con la imagen institucional y eliminamos el bloque oscuro */
         body {
-            background-image: var(--fondo-aula, url('assets/img/background.png')); /* Busca tu imagen si usas variables */
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
+            background-image: url('assets/img/background.png') !important; /* Reemplaza por la ruta exacta de tu fondo del aula */
+            background-size: cover !important;
+            background-attachment: fixed !important;
+            background-position: center !important;
+            background-color: #1a1a1a; /* Color de respaldo por si la imagen tarda en cargar */
+            margin: 0;
+            padding: 0;
         }
         
-        /* Estilo para los semáforos puros en forma de círculos */
+        /* Contenedor principal translúcido para que las tarjetas de información se despeguen del fondo */
+        .main-container {
+            background: rgba(255, 255, 255, 0.05) !important; /* Capa ultra sutil para suavizar el fondo */
+            backdrop-filter: blur(8px);
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Forzamos que las barras flotantes y secciones tengan su fondo de tarjeta contenedor */
+        .aula-header, .user-welcome-bar, .dashboard-block-section {
+            background: #ffffff !important; /* Fondo blanco sólido para las cajas */
+            color: #333333 !important;     /* Texto oscuro legible */
+            border-radius: 12px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        }
+
+        .header-banner h1, .header-banner p, .user-welcome-bar p, .dashboard-block-section h2 {
+            color: #222222 !important;
+        }
+        
+        /* Estilo para los semáforos puros (Círculos perfectos) */
         .semaforo {
             display: inline-block;
             width: 18px;
@@ -25,17 +51,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             vertical-align: middle;
         }
-        .semaforo-verde { background-color: #2ecc71; }
-        .semaforo-amarillo { background-color: #f1c40f; }
-        .semaforo-naranja { background-color: #e67e22; }
-        .semaforo-rojo { background-color: #e74c3c; }
+        .semaforo-verde { background-color: #2ecc71 !important; }
+        .semaforo-amarillo { background-color: #f1c40f !important; }
+        .semaforo-naranja { background-color: #e67e22 !important; }
+        .semaforo-rojo { background-color: #e74c3c !important; }
         
-        /* Centrado para la columna de los semáforos */
         .tabla-seguimiento td {
             text-align: center;
         }
         .tabla-seguimiento td:first-child {
-            text-align: left; /* El nombre del alumno se queda a la izquierda */
+            text-align: left;
         }
     </style>
 </head>
