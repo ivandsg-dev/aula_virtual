@@ -162,7 +162,7 @@ function inicializarVisibilidadElementosAvanzado(esDocente) {
 
 function gestionarFiltroElementoEspecifico(key, estaVisible, esDocente) {
   const contenido = document.getElementById(`contenido-${key}`);
-  
+   
   let idBotonDocente = "";
   if (key === "u1_materiales") idBotonDocente = "btn-visibilidad-m1";
   if (key === "u1_entrega") idBotonDocente = "btn-visibilidad-t1";
@@ -227,6 +227,13 @@ function inicializarFormularioEntregaEspecifico(nombreEstudiante, userId, numUni
         estado: "Pendiente", 
         feedbackDocente: ""  
       });
+
+      // MODIFICACIÓN: Cuando el alumno entrega, seteamos preventivamente el status en la grilla del docente como "amarillo" (esperando revisión docente)
+      const alumnoRef = doc(db, "usuarios", userId);
+      await updateDoc(alumnoRef, {
+        [`status_tp${numUnidad}`]: "amarillo"
+      });
+
       alert(`¡Proyecto de la Unidad ${numUnidad} enviado correctamente!`);
     } catch (error) { console.error(error); }
   };
@@ -324,311 +331,24 @@ window.corregirEntregaAvanzada = async function(id, unidad, nombreAlumno, emailA
   if (feedback === null) return;
 
   try {
+    // 1. Guardar estado en el documento individual de la entrega
     await updateDoc(doc(db, "entregas", id), { estado: estadoFinal, feedbackDocente: feedback.trim() });
-    alert("Evaluación guardada en base de datos.");
+    
+    // 2. MODIFICACIÓN: Sincronizar en tiempo real el estado en el perfil del alumno para el Tablero
+    // Extraemos el UID del alumno sabiendo que el ID del documento es "${userId}_unidad${numUnidad}"
+    const alumnoIdDeducido = id.split("_unidad")[0];
+    const alumnoRef = doc(db, "usuarios", alumnoIdDeducido);
 
-    // SI EVALUAMOS LA UNIDAD 4 Y EL DICTAMEN ES APROBADO, ENVIAMOS EL CORREO POR EMAILJS
-    if (unidad === 4 && estadoFinal === "Aprobado") {
-      console.log("-> Disparando envío de correo de finalización...");
-      
-      // Estructura de variables que va a leer tu plantilla de EmailJS
-      const templateParams = {
-        student_name: nombreAlumno,
-        student_email: emailAlumno,
-        feedback_notes: feedback.trim()
-      };
-
-      // Llamada oficial a EmailJS
-      // (Debes configurar estos IDs desde el panel de EmailJS)
-      emailjs.send("service_oq9kgrq", "template_10lj365", templateParams)
-        .then(() => {
-          alert(`🎉 ¡Excelente! Se le envió un mail automático a ${nombreAlumno} notificando su graduación.`);
-        }, (error) => {
-          console.error("Fallo el envío de EmailJS:", error);
-          alert("La nota se subió, pero hubo un detalle al despachar el correo electrónico.");
-        });
+    // Traducimos tu dictamen a tus palabras clave de semáforo (Verde, Amarillo, Naranja, Rojo)
+    let colorSemoforo = "rojo"; 
+    if (estadoFinal === "Aprobado") {
+      colorSemoforo = "verde"; // Aprobado
+    } else if (estadoFinal === "revisar") {
+      colorSemoforo = "naranja"; // Esperando correcciones del alumno
     }
 
-  } catch (error) { console.error(error); }
-};
-
-// ==========================================
-// 7. CONTROL DE ACCESO GENERAL
-// ==========================================
-onAuthStateChanged(auth, async (user) => {
-  const txtSaludo = document.getElementById('saludo-usuario');
-  if (user) {
-    try {
-      const userDocSnap = await getDoc(doc(db, "usuarios", user.uid));
-      if (userDocSnap.exists()) {
-        const datos = userDocSnap.data();
-        const nombre = datos.nombre || user.email;
-        if (datos.rol === "docente") {
-          inicializarModuloAnuncios(true);
-inicializarModuloConsultas(nombre, user.uid);
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🏫 <strong>Docente:</strong> ${nombre}`;
-          mostrarInterfazDocente();
-        } else {
-          if (txtSaludo) txtSaludo.innerHTML = `👨‍🎓 <strong>Alumno:</strong> ${nombre}`;
-          mostrarInterfazEstudiante(nombre, user.uid);
-          inicializarModuloAnuncios(false);
-inicializarModuloConsultas(nombre, user.uid);
-        }
-      }
-    } catch (e) { console.error(e); }
-  } else {
-    window.location.href = "index.html";
-  }
-});
-
-const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-if (btnCerrarSesion) {
-  btnCerrarSesion.addEventListener('click', () => {
-    signOut(auth).then(() => { window.location.href = "index.html"; });
-  });
-}
-
-// ==========================================
-// 8. MÓDULO 1: NOVEDADES Y ANUNCIOS (UNIDIRECCIONAL)
-// ==========================================
-import { addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; // Asegúrate de que addDoc y orderBy estén importados al inicio del archivo si no lo estaban
-
-function inicializarModuloAnuncios(esDocente) {
-  const panelCrear = document.getElementById('panel-crear-anuncio');
-  const btnPublicar = document.getElementById('btn-publicar-anuncio');
-
-  if (esDocente && panelCrear) {
-    panelCrear.style.display = 'block';
-    btnPublicar.onclick = async () => {
-      const titulo = document.getElementById('anuncio-nuevo-titulo').value.trim();
-      const cuerpo = document.getElementById('anuncio-nuevo-cuerpo').value.trim();
-      if (!titulo || !cuerpo) return alert("Por favor, completa el título y mensaje del anuncio.");
-
-      try {
-        await addDoc(collection(db, "anuncios"), {
-          titulo: titulo,
-          cuerpo: cuerpo,
-          fecha: new Date().toISOString()
-        });
-        document.getElementById('anuncio-nuevo-titulo').value = "";
-        document.getElementById('anuncio-nuevo-cuerpo').value = "";
-        alert("¡Anuncio oficial publicado con éxito!");
-      } catch (e) { console.error("Error publicando anuncio: ", e); }
-    };
-  }
-
-  // Escucha en tiempo real los comunicados
-  const qAnuncios = query(collection(db, "anuncios"), orderBy("fecha", "desc"));
-  onSnapshot(qAnuncios, (snapshot) => {
-    const contenedor = document.getElementById('lista-anuncios-contenedor');
-    if (!contenedor) return;
-    contenedor.innerHTML = "";
-
-    if (snapshot.empty) {
-      contenedor.innerHTML = `<p class="txt-muted" style="font-size:13px;">No hay comunicados oficiales.</p>`;
-      return;
-    }
-
-    // Lógica del Warning visual local
-    const ultimoAnuncioIdSaved = localStorage.getItem('last_seen_anuncio_id');
-    let primerDocId = "";
-
-    snapshot.forEach((docSnap) => {
-      const anuncio = docSnap.data();
-      const id = docSnap.id;
-      if (!primerDocId) primerDocId = id; // Guardamos el más reciente de la lista
-
-      const d = new Date(anuncio.fecha);
-      const fFormato = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-
-      const item = document.createElement('div');
-      item.className = 'item-foro-link';
-      item.innerHTML = `
-        <div><strong>📢 ${anuncio.titulo}</strong><br><small class="txt-muted">Publicado el ${fFormato}</small></div>
-        <div><span class="btn-link" style="font-size:12px;">Leer completo ➔</span></div>
-      `;
-      item.onclick = () => abrirPopupAnuncio(anuncio, id);
-      contenedor.appendChild(item);
+    await updateDoc(alumnoRef, {
+      [`status_tp${unidad}`]: colorSemoforo
     });
 
-    // Validar si el anuncio más nuevo ya fue visto por este navegador
-    const alertaGlobal = document.getElementById('alerta-novedad-global');
-    if (alertaGlobal) {
-      if (ultimoAnuncioIdSaved !== primerDocId && !esDocente) {
-        alertaGlobal.style.display = 'inline-block';
-      } else {
-        alertaGlobal.style.display = 'none';
-      }
-    }
-  });
-}
-
-function abrirPopupAnuncio(anuncio, id) {
-  // Cuando abre el aviso, asume que ya lo vio y quita el warning
-  localStorage.setItem('last_seen_anuncio_id', id);
-  const alertaGlobal = document.getElementById('alerta-novedad-global');
-  if (alertaGlobal) alertaGlobal.style.display = 'none';
-
-  const bodyModal = document.getElementById('modal-foro-dinamico-body');
-  bodyModal.innerHTML = `
-    <h2 style="color:#0f172a; margin-bottom:10px;">📢 Anuncio Oficial</h2>
-    <h3 style="color:#2563eb; margin-bottom:15px; font-size:18px;">${anuncio.titulo}</h3>
-    <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; line-height:1.6; color:#334155; white-space: pre-wrap;">${anuncio.cuerpo}</div>
-    <p style="font-size:11px; color:#94a3b8; margin-top:15px; text-align:right;">Fecha de emisión: ${new Date(anuncio.fecha).toLocaleString()}</p>
-  `;
-  document.getElementById('modal-foro-popup').style.display = 'flex';
-}
-
-// ==========================================
-// 9. MÓDULO 2: FORO DE CONSULTAS Y DISCUSIÓN (OPTIMIZADO CON ALERTA DE COMENTARIOS)
-// ==========================================
-function inicializarModuloConsultas(nombreUsuario, uidUsuario) {
-  const btnPublicar = document.getElementById('btn-publicar-consulta');
-  if (btnPublicar) {
-    btnPublicar.onclick = async () => {
-      const titulo = document.getElementById('foro-nuevo-titulo').value.trim();
-      if (!titulo) return alert("Por favor introduce una pregunta o tema para debatir.");
-
-      try {
-        await addDoc(collection(db, "foros_consultas"), {
-          titulo: titulo,
-          autorNombre: nombreUsuario,
-          autorId: uidUsuario,
-          fecha: new Date().toISOString(),
-          comentarios: []
-        });
-        document.getElementById('foro-nuevo-titulo').value = "";
-        alert("¡Consulta publicada! Ya está disponible para la comunidad.");
-      } catch (e) { console.error(e); }
-    };
-  }
-
-  const qForos = query(collection(db, "foros_consultas"), orderBy("fecha", "desc"));
-  onSnapshot(qForos, (snapshot) => {
-    const contenedor = document.getElementById('lista-consultas-contenedor');
-    if (!contenedor) return;
-    contenedor.innerHTML = "";
-
-    if (snapshot.empty) {
-      contenedor.innerHTML = `<p class="txt-muted" style="font-size:13px;">Nadie ha iniciado consultas aún.</p>`;
-      return;
-    }
-
-    const ultimaConsultaIdSaved = localStorage.getItem('last_seen_consulta_id');
-    let primerDocId = "";
-
-    snapshot.forEach((docSnap) => {
-      const consulta = docSnap.data();
-      const id = docSnap.id;
-      if (!primerDocId) primerDocId = id;
-
-      const comentariosExistentes = consulta.comentarios ? consulta.comentarios.length : 0;
-      
-      // LOGICA DE REVISIÓN: ¿Hay comentarios que el usuario no vio?
-      const claveStorageComentarios = `vistos_comentarios_${id}`;
-      const comentariosVistosAnteriormente = parseInt(localStorage.getItem(claveStorageComentarios) || "0", 10);
-      
-      let badgeNuevasRespuestasHTML = "";
-      // Si hay más comentarios en la DB que los que el usuario vio en su navegador, mostramos la alerta
-      if (comentariosExistentes > comentariosVistosAnteriormente) {
-        badgeNuevasRespuestasHTML = `<span class="badge-comentarios-nuevos">¡Nuevas respuestas!</span>`;
-      }
-
-      const item = document.createElement('div');
-      item.className = 'item-foro-link';
-      item.innerHTML = `
-        <div>
-          <strong>❓ ${consulta.titulo}</strong> ${badgeNuevasRespuestasHTML}<br>
-          <small class="txt-muted">Por ${consulta.autorNombre} • 💬 ${comentariosExistentes} aportes</small>
-        </div>
-        <div><span class="btn-link" style="font-size:12px;">Participar ➔</span></div>
-      `;
-      item.onclick = () => abrirPopupConsultaHilo(consulta, id, nombreUsuario);
-      contenedor.appendChild(item);
-    });
-
-    const alertaForoGlobal = document.getElementById('alerta-foro-global');
-    if (alertaForoGlobal) {
-      if (ultimaConsultaIdSaved !== primerDocId && snapshot.docs[0].data().autorId !== uidUsuario) {
-        alertaForoGlobal.style.display = 'inline-block';
-      } else {
-        alertaForoGlobal.style.display = 'none';
-      }
-    }
-  });
-}
-
-function abrirPopupConsultaHilo(consulta, id, nombreLector) {
-  localStorage.setItem('last_seen_consulta_id', id);
-  const alertaForoGlobal = document.getElementById('alerta-foro-global');
-  if (alertaForoGlobal) alertaForoGlobal.style.display = 'none';
-
-  onSnapshot(doc(db, "foros_consultas", id), (docSnap) => {
-    if (!docSnap.exists()) return;
-    const datosActualizados = docSnap.data();
-    
-    const totalComentariosActuales = datosActualizados.comentarios ? datosActualizados.comentarios.length : 0;
-    
-    // Al abrir o recibir actualización con el modal abierto, marcamos todos como "leídos" en este dispositivo
-    localStorage.setItem(`vistos_comentarios_${id}`, totalComentariosActuales);
-    
-    const bodyModal = document.getElementById('modal-foro-dinamico-body');
-    let htmlComentarios = "";
-
-    if (totalComentariosActuales > 0) {
-      datosActualizados.comentarios.forEach(c => {
-        htmlComentarios += `
-          <div class="comentario-item">
-            <strong>${c.autor}:</strong> ${c.texto}
-          </div>`;
-      });
-    } else {
-      htmlComentarios = `<p class="txt-muted" style="font-size:12px; padding:10px 0;">No hay respuestas aún. ¡Sé el primero en aportar!</p>`;
-    }
-
-    bodyModal.innerHTML = `
-      <h2 style="color:#0f172a; margin-bottom:5px; font-size:16px;">❓ Consulta de Alumno:</h2>
-      <h3 style="color:#0f172a; margin-bottom:15px; font-size:18px; font-weight:700;">"${datosActualizados.titulo}"</h3>
-      <p style="font-size:12px; color:#64748b; margin-bottom:15px;">Iniciado por: <strong>${datosActualizados.autorNombre}</strong></p>
-      
-      <div style="border-top:1px solid #e2e8f0; padding-top:15px;">
-         <h4 style="font-size:14px; color:#1e293b; margin-bottom:10px;">💬 Respuestas y aportes:</h4>
-         <div style="max-height:180px; overflow-y:auto; margin-bottom:15px;">${htmlComentarios}</div>
-      </div>
-
-      <div style="margin-top:10px; border-top:1px solid #e2e8f0; padding-top:15px;">
-        <input type="text" id="input-nuevo-comentario-texto" placeholder="Escribe tu respuesta o sugerencia técnica..." class="input-inline" style="width:75%; margin-right:2%;">
-        <button id="btn-enviar-comentario-foro" class="btn-action" style="width:20%; padding:8px 0;">Enviar</button>
-      </div>
-    `;
-
-    document.getElementById('btn-enviar-comentario-foro').onclick = async () => {
-      const textoComentario = document.getElementById('input-nuevo-comentario-texto').value.trim();
-      if (!textoComentario) return;
-
-      const listaComentariosActuales = datosActualizados.comentarios || [];
-      listaComentariosActuales.push({
-        autor: nombreLector,
-        texto: textoComentario,
-        fecha: new Date().toISOString()
-      });
-
-      try {
-        await updateDoc(doc(db, "foros_consultas", id), { comentarios: listaComentariosActuales });
-        // Actualizamos inmediatamente el storage para que al escribir nosotros no se marque como "no leído"
-        localStorage.setItem(`vistos_comentarios_${id}`, listaComentariosActuales.length);
-      } catch (e) { console.error(e); }
-    };
-  });
-
-  document.getElementById('modal-foro-popup').style.display = 'flex';
-}
-// ==========================================
-// CONTROL DE MODALES EN EL OBJETO WINDOWS (MÓDULOS ES6)
-// ==========================================
-window.cerrarModalForoPopup = function() {
-  const modal = document.getElementById('modal-foro-popup');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-};
+    alert("Evaluación guardada en base de datos
